@@ -123,3 +123,18 @@ export function splitKdtMonthly(kdtMonthly) {
 
     return { monthly, rows, curM, actualTotal, expectedTotal, grandTotal: actualTotal + expectedTotal, categories };
 }
+
+export function extractYear(str) {
+    const d = parseDateString(str);
+    if (d) return d.getFullYear();
+    const m = String(str || '').match(/(19\d{2}|20\d{2})/);
+    return m ? parseInt(m[1], 10) : null;
+}
+
+export function projectInYear(p, year, periodParse) {
+    const pp = periodParse || parsePeriodRange(p.periodText);
+    if (pp && pp.isValid && pp.start && pp.end) {
+        return pp.start.getFullYear() <= year && pp.end.getFullYear() >= year;
+    }
+    return extractYear(p.proposalPeriod) === year;
+}
