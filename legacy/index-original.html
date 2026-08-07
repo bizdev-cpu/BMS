@@ -1016,6 +1016,7 @@
         // ==========================================
         // 5. 대시보드 화면 컴포넌트
         // ==========================================
+        {/*
         function Dashboard({ projects, rentals, kdt, kdtMonthly, monitoring, targets, selectedYear, formatKRW }) {
             
             // 2026년 이전 데이터 소실 경고 여부
@@ -1258,7 +1259,7 @@
                 if (Array.isArray(window.__pendingCache)) { setPendingCount(window.__pendingCache.length); return; }
                 (async () => {
                     try { const list = await gasRun('apiReadPendingDecisions'); const arr = Array.isArray(list) ? list : []; window.__pendingCache = arr; setPendingCount(arr.length); }
-                    catch (e) { /* 실패 시 0 */ }
+                    catch (e) { // 실패 시 0 
                 })();
             }, []);
 
@@ -1315,7 +1316,7 @@
             return (
                 <div className="space-y-8 animate-fadeIn">
                     
-                    {/* 데이터 소실 경고창 */}
+                    //데이터 소실 경고창
                     {showWarning && (
                         <div className="p-5 bg-amber-500/10 border border-amber-500/20 text-amber-600 rounded-2xl flex items-start space-x-4 shadow-xl shadow-amber-950/20">
                             <Icon name="warning" className="w-6 h-6 mt-0.5 text-amber-600 animate-pulse flex-shrink-0" />
@@ -1328,7 +1329,7 @@
                         </div>
                     )}
 
-                    {/* 대시보드 헤더 */}
+                    // 대시보드 헤더
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <div>
                             <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">{selectedYear}년 사업본부 매출 현황</h2>
@@ -1336,7 +1337,7 @@
                         </div>
                     </div>
 
-                    {/* KPI 카드 섹션 — 총 매출 · KDT · 제안 사업(유형별) · 대관 */}
+                    // KPI 카드 섹션 — 총 매출 · KDT · 제안 사업(유형별) · 대관
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-6 relative overflow-hidden group hover:border-brand-500/50 transition-all duration-300">
                             <div className="absolute -right-4 -bottom-4 opacity-10 text-blue-600 group-hover:scale-110 transition-transform duration-300">
@@ -1406,10 +1407,10 @@
                         </div>
                     </div>
 
-                    {/* 매출 목표 및 달성도 + 수주 현황 파이 차트 대치 */}
+                    //매출 목표 및 달성도 + 수주 현황 파이 차트 대치
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
-                        {/* 연간 목표 달성도 */}
+                        //연간 목표 달성도
                         <div className="bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-6 flex flex-col justify-between">
                             <div>
                                 <div className="flex items-start justify-between gap-2">
@@ -1427,9 +1428,9 @@
                             </div>
                             
                             <div className="my-6 flex flex-col items-center justify-center relative">
-                                {/* 목표 도넛 또는 프로그레스 */}
+                                //목표 도넛 또는 프로그레스
                                 <div className="relative w-36 h-36 flex items-center justify-center group cursor-help">
-                                    {/* 원형 트랙 */}
+                                    //원형 트랙
                                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                         <circle cx="50" cy="50" r="40" stroke="rgba(30, 41, 59, 0.6)" strokeWidth="8" fill="transparent" />
                                         <circle 
@@ -1455,7 +1456,7 @@
                                         <span className="text-3xl font-black text-slate-900">{targetInfo.percent}%</span>
                                         <span className="block text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5">{includeExpected ? '예상 포함' : '현재시점'}</span>
                                     </div>
-                                    {/* 호버 툴팁: 소스별 구성 비율 */}
+                                    // 호버 툴팁: 소스별 구성 비율
                                     <div className="hidden group-hover:block absolute z-20 top-full mt-2 left-1/2 -translate-x-1/2 w-56 bg-white border border-slate-200 rounded-xl shadow-2xl p-3 text-left">
                                         <div className="text-[11px] font-bold text-slate-500 mb-2">달성액 구성 ({includeExpected ? '예상 포함' : '현재시점'})</div>
                                         {targetInfo.srcTotal > 0 ? (
@@ -1499,7 +1500,7 @@
                             </div>
                         </div>
 
-                        {/* 제안 건수 및 단계별 수주 통계 */}
+                        // 제안 건수 및 단계별 수주 통계
                         <div className="bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-6 lg:col-span-2 flex flex-col justify-between">
                             <div>
                                 <h3 className="text-lg font-bold text-slate-900 mb-1">📊 연도별 사업 수주 및 제안 현황</h3>
@@ -1537,14 +1538,14 @@
                         </div>
                     </div>
 
-                    {/* 인터랙티브 월별 통합 매출 트렌드 그래프 (커스텀 SVG) */}
+                    // 인터랙티브 월별 통합 매출 트렌드 그래프 (커스텀 SVG)
                     <div className="bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-6">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 space-y-3 md:space-y-0">
                             <div>
                                 <h3 className="text-lg font-bold text-slate-900">📈 월별 발생 매출 트렌드 시각화</h3>
                                 <p className="text-xs text-slate-400">현재 보기 합계: <span className="text-blue-700 font-semibold">{formatKRW(viewTotal)}</span></p>
                             </div>
-                            {/* 소스별 보기 토글 (전체 / 제안 사업 / 대관 사업 / KDT) */}
+                            // 소스별 보기 토글 (전체 / 제안 사업 / 대관 사업 / KDT)
                             <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200">
                                 {[
                                     { id: 'all', label: '전체 보기' },
@@ -1563,7 +1564,7 @@
                             </div>
                         </div>
 
-                        {/* 현재 보기 기준 범례 */}
+                        // 현재 보기 기준 범례
                         <div className="flex items-center space-x-4 text-xs font-semibold text-slate-500 mb-2 h-4">
                             {showKdt && kdtCatNames.map(n => (
                                 <span key={n} className="flex items-center"><span className="w-3 h-3 rounded-sm mr-1.5" style={{ backgroundColor: KDT_COLORS[n] || '#f59e0b' }}></span>{n}</span>
@@ -1574,9 +1575,9 @@
                             {showRental && <span className="flex items-center"><span className="w-3 h-3 bg-cyan-400 rounded-sm mr-1.5"></span>대관 사업</span>}
                         </div>
 
-                        {/* 그래프 영역 */}
+                        // 그래프 영역
                         <div className="relative w-full h-80 pt-6">
-                            {/* Y축 그리드 가이드 및 금액 (깔끔한 눈금 + 축약 표기) */}
+                            // Y축 그리드 가이드 및 금액 (깔끔한 눈금 + 축약 표기)
                             <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-slate-400 font-medium pointer-events-none pb-8 pl-2">
                                 {axisTicks.map((t, i) => (
                                     <div key={i} className="flex items-center gap-2">
@@ -1586,7 +1587,7 @@
                                 ))}
                             </div>
 
-                            {/* 바 그래프 바디 */}
+                            // 바 그래프 바디
                             <div className="w-full h-full flex justify-between items-end pb-8 pl-16 pr-4 relative z-10">
                                 {monthsView.map((m, idx) => {
                                     // 현재 보기 기준 각 매출의 비중 높이 비율 계산
@@ -1599,7 +1600,7 @@
                                     return (
                                         <div key={idx} className="flex-1 flex flex-col items-center group relative h-full justify-end">
                                             
-                                            {/* 마우스 호버 툴팁 */}
+                                            // 마우스 호버 툴팁
                                             <div className="absolute bottom-full mb-2 bg-white border border-slate-200 rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-30 text-left min-w-[210px] max-w-[280px]">
                                                 <div className="text-[11px] font-bold text-slate-500 mb-1">{selectedYear}년 {m.month} 실적</div>
                                                 <div className="text-[10px] space-y-1">
@@ -1607,7 +1608,7 @@
                                                         <div key={n} className="flex justify-between"><span className="font-semibold" style={{ color: KDT_COLORS[n] || '#d97706' }}>{n}{m.kdtExpected ? '(예상)' : ''}{m.vTotal > 0 ? ` (${(((m.vKdtCats[n] || 0) / m.vTotal) * 100).toFixed(2)}%)` : ''}:</span> <span className={m.kdtExpected ? 'italic text-amber-600' : ''}>{formatKRW(m.vKdtCats[n] || 0)}</span></div>
                                                     )))}
                                                     {showProject && <div className="flex justify-between"><span className="text-violet-600 font-semibold">제안{m.vTotal > 0 ? ` (${((m.vProject / m.vTotal) * 100).toFixed(2)}%)` : ''}:</span> <span>{formatKRW(m.vProject)}</span></div>}
-                                                    {/* 제안사업 사업명별 비중 (제안 매출 대비 %) */}
+                                                    // 제안사업 사업명별 비중 (제안 매출 대비 %)
                                                     {showProject && m.projectItems && m.projectItems.length > 0 && (
                                                         <div className="pl-2 ml-1 border-l border-violet-500/30 space-y-0.5">
                                                             {m.projectItems.slice(0, 8).map((it, i) => (
@@ -1622,7 +1623,7 @@
                                                         </div>
                                                     )}
                                                     {showProject && m.vProjEst > 0 && <div className="flex justify-between"><span className="text-violet-400 font-semibold">└ 제안 예상{m.vTotal > 0 ? ` (${((m.vProjEst / m.vTotal) * 100).toFixed(2)}%)` : ''}:</span> <span className="italic text-violet-500">{formatKRW(m.vProjEst)}</span></div>}
-                                                    {/* 제안 예상 사업명별 비중 (제안 예상 대비 %) */}
+                                                    // 제안 예상 사업명별 비중 (제안 예상 대비 %)
                                                     {showProject && projEstimate.monthlyItems[idx] && projEstimate.monthlyItems[idx].length > 0 && (
                                                         <div className="pl-2 ml-1 border-l border-violet-400/30 space-y-0.5">
                                                             {projEstimate.monthlyItems[idx].slice(0, 8).map((it, i) => (
@@ -1641,15 +1642,15 @@
                                                 </div>
                                             </div>
 
-                                            {/* 누적 바 기둥 (토글에 따라 분리 표시) */}
+                                            // 누적 바 기둥 (토글에 따라 분리 표시)
                                             <div className="w-10 rounded-t-md overflow-hidden flex flex-col justify-end transition-all duration-500 ease-out group-hover:scale-x-105" style={{ height: `${Math.max(totalHeight, 1.5)}%` }}>
-                                                {/* 대관 바 (맨 위) */}
+                                                // 대관 바 (맨 위)
                                                 {showRental && <div className="bg-cyan-400 w-full" style={{ height: `${(rentalHeight / Math.max(totalHeight, 1)) * 100}%` }}></div>}
-                                                {/* 제안 예상 바 (빗금 — 파이프라인/모니터링) */}
+                                                // 제안 예상 바 (빗금 — 파이프라인/모니터링)
                                                 {showProject && m.vProjEst > 0 && <div className="w-full" title="제안 예상(파이프라인·모니터링)" style={{ height: `${(projEstHeight / Math.max(totalHeight, 1)) * 100}%`, backgroundColor: '#a78bfa', backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.65) 0, rgba(255,255,255,0.65) 3px, transparent 3px, transparent 7px)' }}></div>}
-                                                {/* 제안 사업 바 (중간) */}
+                                                // 제안 사업 바 (중간)
                                                 {showProject && <div className="bg-brand-600 w-full" style={{ height: `${(projHeight / Math.max(totalHeight, 1)) * 100}%` }}></div>}
-                                                {/* KDT 분류별 바 (딥다이브/카테부/케클업, 미래월=빗금 예상) */}
+                                                // KDT 분류별 바 (딥다이브/카테부/케클업, 미래월=빗금 예상)
                                                 {showKdt && kdtCatNames.map(n => {
                                                     const amt = m.vKdtCats[n] || 0; if (amt <= 0) return null;
                                                     const h = (amt / maxMonthSales) * 100;
@@ -1660,7 +1661,7 @@
                                                 })}
                                             </div>
 
-                                            {/* X축 월 텍스트 */}
+                                            // X축 월 텍스트 
                                             <span className="absolute top-full mt-2 text-xs font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">{m.month}</span>
                                         </div>
                                     );
@@ -1671,7 +1672,7 @@
 
                 </div>
             );
-        }
+        } */}
 
         // ==========================================
         // 6. 제안 사업 관리 CRUD 화면 컴포넌트
@@ -2885,6 +2886,7 @@
         // ==========================================
         // 8. KDT 관리 CRUD 화면 컴포넌트
         // ==========================================
+        {/*
         function KdtManagement({ kdtMonthly, formatKRW }) {
             const k = splitKdtMonthly(kdtMonthly);
             const rows = k.rows;
@@ -2903,7 +2905,7 @@
             const [snapBusy, setSnapBusy] = useState(false);
             const [snapMsg, setSnapMsg] = useState('');
             const loadReport = async () => {
-                try { if (typeof isGasHosted === 'function' && isGasHosted()) setKdtReport(await gasRun('apiKdtChangeReport')); } catch (e) { /* 로컬모드 무시 */ }
+                try { if (typeof isGasHosted === 'function' && isGasHosted()) setKdtReport(await gasRun('apiKdtChangeReport')); } catch (e) // 로컬모드 무시
             };
             useEffect(() => { loadReport(); }, []);
             const takeSnapshot = async () => {
@@ -2940,7 +2942,7 @@
                         </div>
                     </div>
 
-                    {/* 분류별 요약 */}
+                    //분류별 요약
                     {cats.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {cats.map(c => (
@@ -2984,7 +2986,7 @@
                                                         return <div key={c.name} className="h-full" style={style}></div>;
                                                     })}
                                                 </div>
-                                                {/* 호버 툴팁: 분류별 금액 범례 */}
+                                                // 호버 툴팁: 분류별 금액 범례
                                                 <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 bg-white border border-slate-200 rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-30 text-left min-w-[200px]">
                                                     <div className="text-[11px] font-bold text-slate-500 mb-1">{r.month}월 {expected ? '(예상)' : '(발생)'}</div>
                                                     <div className="text-[10px] space-y-1">
@@ -3015,7 +3017,7 @@
                         <p className="text-[11px] text-slate-400 mt-4">* 데이터는 KDT 시트에서 직접 수정합니다(이 화면은 조회 전용). 합계는 소수점 이하 버림.</p>
                     </div>
 
-                    {/* 예상값 변동 추적 리포트 */}
+                    // 예상값 변동 추적 리포트
                     <div className="bg-white border border-slate-200 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
                             <p className="text-sm font-bold text-slate-700">예상값 변동 추적 <span className="font-normal text-slate-400">(월 1회 스냅샷 기준)</span></p>
@@ -3030,7 +3032,7 @@
                             <p className="text-sm text-slate-400 font-semibold py-6 text-center">스냅샷이 없습니다. ‘지금 스냅샷’을 누르면 현재 KDT 값이 기록되고, 다음 달부터 변동을 비교합니다. (매월 1일 자동 저장을 켜려면 <code>setupKdtSnapshotTrigger</code> 1회 실행)</p>
                         ) : (
                             <div className="space-y-6">
-                                {/* 예상 → 발생 차액 */}
+                                // 예상 → 발생 차액
                                 <div>
                                     <p className="text-xs font-bold text-slate-600 mb-2">예상 → 발생 차액 <span className="font-normal text-slate-400">(마지막 예상 대비 실제 발생)</span></p>
                                     {realized.length === 0 ? (
@@ -3056,7 +3058,7 @@
                                     )}
                                 </div>
 
-                                {/* 예상값 추이(스냅샷 간 변동) */}
+                                // 예상값 추이(스냅샷 간 변동)
                                 <div>
                                     <p className="text-xs font-bold text-slate-600 mb-2">예상값 추이 <span className="font-normal text-slate-400">(스냅샷마다 예상이 어떻게 바뀌었는지 · 빨강=감소)</span></p>
                                     {expChanges.length === 0 ? (
@@ -3090,7 +3092,7 @@
                     </div>
                 </div>
             );
-        }
+        } */}
 
 
 
@@ -3733,6 +3735,7 @@
         // ==========================================
         // 8.5 제안 모니터링 화면 (Monitor.gs 연동)
         // ==========================================
+        
         function MonitoringManagement({ formatKRW, loadData, mode, projects, executeAction }) {
             const hosted = isGasHosted();
             const [sub, setSub] = useState('progress');  // progress | list | config | dash (기본: 진행 중 건)
@@ -4207,7 +4210,8 @@
                     {sub === 'progress' && (
                         <ProgressBoard projects={projects} formatKRW={formatKRW} loadData={loadData} executeAction={executeAction} embedded={true} />
                     )}
-
+                    
+                    {/*
                     {sub === 'list' && (
                         <div className="flex flex-wrap items-center gap-2 text-xs">
                             <span className="font-bold text-slate-500">상태</span>
@@ -4227,7 +4231,7 @@
                                 <button onClick={() => setShowAdd(v => !v)} className="px-3 py-1 rounded-lg font-bold border bg-brand-50 text-brand-600 border-brand-200">➕ 수기 추가</button>
                             </span>
                         </div>
-                    )}
+                    )} */}
 
                     {showAdd && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => { setShowAdd(false); setForm({}); }}>
@@ -4314,7 +4318,8 @@
                             </div>
                         </div>
                     )}
-
+                    
+                    {/*
                     {sub === 'list' && (() => {
                         const filtered = items.filter(r => statusFilter.includes(normStatus(r['상태'])));
                         const shown = applySort(filtered, sort.sortKey, sort.sortDir, { '수집일': 'date', '마감일': 'date', '점수': 'number' });
@@ -4403,8 +4408,8 @@
                             </div>
                         </div>
                         );
-                    })()}
-
+                    })()} */}
+                    {/*
                     {sub === 'config' && cfg && (
                         <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4501,7 +4506,8 @@
                             </div>
                         </div>
                     )}
-
+                    
+                    {/*
                     {sub === 'dash' && (
                         <div className="space-y-4">
                             <div className="grid grid-cols-3 gap-3">
@@ -4550,14 +4556,15 @@
                                 <p className="text-[11px] text-slate-400 mt-4">* '제안 진행'은 해당 건을 '제안 등록'(전체 사업에 제안 중으로 등록)한 건수입니다. 수집일 기준 집계.</p>
                             </div>
                         </div>
-                    )}
+                    )} */}
                 </div>
             );
         }
-
+        
         // ==========================================
         // 9. 시스템 설정 화면 컴포넌트
         // ==========================================
+        /*
         function Settings({ mode, setMode, apiUrl, setApiUrl, deletedHistory, loadData }) {
             const [urlInput, setUrlInput] = useState(apiUrl);
 
@@ -4605,7 +4612,7 @@
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
-                        {/* 연동 모드 설정 */}
+                        // 연동 모드 설정
                         <div className="bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-6 lg:col-span-2 space-y-6">
                             <div>
                                 <h3 className="text-lg font-bold text-slate-900 mb-1">🔗 데이터 베이스 연동 방식</h3>
@@ -4667,7 +4674,7 @@
                             )}
                         </div>
 
-                        {/* 연동 방법 안내 가이드 */}
+                        // 연동 방법 안내 가이드
                         <div className="bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-6 space-y-4">
                             <h3 className="text-base font-bold text-slate-900">⚙️ 구글 스프레드시트 세팅 가이드</h3>
                             <div className="text-xs text-slate-500 space-y-3 leading-relaxed">
@@ -4695,7 +4702,7 @@
 
                     </div>
 
-                    {/* 시트 이름 설정 (연동 방식 아래) */}
+                    // 시트 이름 설정 (연동 방식 아래)
                     <div className="bg-white border border-slate-200 rounded-2xl p-6">
                         <div className="mb-4">
                             <h3 className="text-sm font-bold text-slate-900">시트 이름</h3>
@@ -4721,7 +4728,7 @@
                         </div>
                     </div>
 
-                    {/* 안전 삭제 아카이브 로그 (삭제 내역 시트 미러링) */}
+                    // 안전 삭제 아카이브 로그 (삭제 내역 시트 미러링)
                     <div className="bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-6">
                         <div className="mb-4">
                             <h3 className="text-lg font-bold text-slate-900 mb-1">🗑️ 안전 삭제 내역 아카이브 감사 로그</h3>
@@ -4763,7 +4770,7 @@
 
                 </div>
             );
-        }
+        } */
 
         // ReactDOM 렌더링
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
