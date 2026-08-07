@@ -1,6 +1,5 @@
 
 // 날짜 출력, 원화 출력, 차트 눈금 계산
-
 export function cleanString(str) {
     if (!str) return '';
     return String(str).replace(/\s+/g, ''); // 모든 공백 제거
@@ -41,7 +40,7 @@ export function formatKRWShort(val) {
 }
 
 // 눈금용 '깔끔한' step 계산 ({1,2,5}×10^n)
-function niceStep(rough) {
+export function niceStep(rough) {
     if (!rough || rough <= 0) return 1;
     const mag = Math.pow(10, Math.floor(Math.log10(rough)));
     const f = rough / mag;
