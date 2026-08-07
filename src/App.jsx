@@ -1,42 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import Footer from './components/layout/Footer';
+
+import Dashboard from './pages/Dashboard';
 import ProjectManagement from './pages/ProjectManagement';
+import RentalManagement from './pages/RentalManagement';
+import KdtManagement from './pages/KdtManagement';
+import Settings from './pages/Settings';
+import Monitoring from './pages/Monitoring';
+
+import {
+  executeBmsAction,
+  readAllData,
+} from './api/bmsApi';
 
 import { formatKRW } from './util/format';
 
 const APP_VERSION = '0.0.1';
 const APP_UPDATED = '2026-06-26';
 
-const sampleProjects = [
-  {
-    proposalPeriod: '2026-04',
-    type: 'B2G',
-    name: '2026년 강남구 청년 AI 아카데미 운영사업',
-    sales: 50000000,
-    cost: 50000000,
-    client: '강남구청',
-    stage: '수주',
-    participation: '단독',
-    consortium: '구름',
-    shareRatio: 100,
-    periodText: '2026-04-01 ~ 2026-12-31',
-    target: '일반성인',
-    note: '지자체 매칭 예산',
-    managers: '김가인',
-    comments: '',
-  },
-];
-
 const menus = [
   { id: 'dashboard', label: '대시보드', icon: 'dashboard' },
   { id: 'projects', label: '제안 사업', icon: 'project' },
-  { id: 'monitoring', label: '공고 모니터링', icon: 'info' },
-  { id: 'rental', label: '대관 관리', icon: 'rental' },
+  { id: 'rental', label: '대관사업 관리', icon: 'rental' },
   { id: 'kdt', label: 'KDT 관리', icon: 'kdt' },
-  { id: 'settings', label: '설정', icon: 'settings' },
+  { id: 'monitoring', label: '제안 모니터링', icon: 'info' },
+  { id: 'settings', label: '시스템 설정', icon: 'settings' },
 ];
 
 export default function App() {
@@ -44,35 +35,92 @@ export default function App() {
     new Date().getFullYear(),
   );
 
-  const [mode] = useState('mock');
-  const [activeTab, setActiveTab] = useState('projects');
-  const [projects, setProjects] = useState(sampleProjects);
+  const [mode, setMode] = useState('api');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
-  // API 연결 전 임시값
+  const [projects, setProjects] = useState([]);
+  const [rentals, setRentals] = useState([]);
+  const [kdt, setKdt] = useState([]);
+
+  const [kdtMonthly, setKdtMonthly] = useState({
+    total: Array(12).fill(0),
+    categories: [],
+  });
+
+  const [monitoring, setMonitoring] = useState([]);
+  const [targets, setTargets] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // 빌드 정보 API는 나중에 연결
   const buildInfo = null;
 
-  const executeAction = (actionName, payload) => {
-    if (actionName === 'addProject') {
-      setProjects((prev) => [...prev, payload]);
-      return;
-    }
+  const loadData = async () => {
+    setLoading(true);
+    setError('');
 
-    if (actionName === 'updateProject') {
-      setProjects((prev) =>
-        prev.map((project) =>
-          project.name === payload.name
-            ? { ...project, ...payload }
-            : project,
-        ),
-      );
-      return;
-    }
+    try {
+      const data = await readAllData();
 
-    if (actionName === 'deleteProject') {
-      setProjects((prev) =>
-        prev.filter((project) => project.name !== payload.name),
+      setProjects(
+        Array.isArray(data.projects) ? data.projects : [],
       );
+
+      setRentals(
+        Array.isArray(data.rentals) ? data.rentals : [],
+      );
+
+      setKdt(
+        Array.isArray(data.kdt) ? data.kdt : [],
+      );
+
+      setKdtMonthly(
+        data.kdtMonthly || {
+          total: Array(12).fill(0),
+          categories: [],
+        },
+      );
+
+      setMonitoring(
+        Array.isArray(data.monitoring)
+          ? data.monitoring
+          : [],
+      );
+
+      setTargets(
+        Array.isArray(data.targets)
+          ? data.targets
+          : [],
+      );
+
+      console.log('BMS 실제 데이터:', data);
+    } catch (err) {
+      console.error('BMS 데이터 로드 실패:', err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : '데이터를 불러오지 못했습니다.',
+      );
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const executeAction = async (actionName, payload) => {
+    const result = await executeBmsAction(
+      actionName,
+      payload,
+    );
+
+    await loadData();
+
+    return result;
   };
 
   return (
@@ -91,21 +139,110 @@ export default function App() {
         />
 
         <main className="min-w-0 flex-1 p-6">
-          {activeTab === 'projects' && (
-            <ProjectManagement
-              projects={projects}
-              executeAction={executeAction}
-              formatKRW={formatKRW}
-              selectedYear={selectedYear}
-            />
-          )}
-
-          {activeTab !== 'projects' && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-400">
-              {menus.find((menu) => menu.id === activeTab)?.label} 페이지는 아직
-              이전 중입니다.
+          {loading && (
+            <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+              Google Sheet 데이터를 불러오는 중입니다.
             </div>
           )}
+
+          {!loading && error && (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-600">
+              <p className="font-bold">
+                데이터 연결에 실패했습니다.
+              </p>
+
+              <p className="mt-1">
+                {error}
+              </p>
+
+              <button
+                type="button"
+                onClick={loadData}
+                className="mt-4 rounded-lg bg-rose-600 px-4 py-2 font-bold text-white"
+              >
+                다시 불러오기
+              </button>
+            </div>
+          )}
+
+          {!loading &&
+            !error &&
+            activeTab === 'dashboard' && (
+              <Dashboard
+                projects={projects}
+                rentals={rentals}
+                kdt={kdt}
+                kdtMonthly={kdtMonthly}
+                monitoring={monitoring}
+                targets={targets}
+                selectedYear={selectedYear}
+                formatKRW={formatKRW}
+              />
+            )}
+
+          {!loading &&
+            !error &&
+            activeTab === 'projects' && (
+              <ProjectManagement
+                projects={projects}
+                executeAction={executeAction}
+                formatKRW={formatKRW}
+                selectedYear={selectedYear}
+              />
+            )}
+
+          {!loading &&
+            !error &&
+            !['dashboard', 'projects','rental', 'kdt', 'settings', 'monitoring'].includes(activeTab) && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-400">
+                {
+                  menus.find(
+                    (menu) => menu.id === activeTab,
+                  )?.label
+                }{' '}
+                페이지는 아직 이전 중입니다.
+              </div>
+            )}
+
+            {!loading &&
+              !error &&
+              activeTab === 'rental' && (
+                <RentalManagement
+                  rentals={rentals}
+                  executeAction={executeAction}
+                  formatKRW={formatKRW}
+                />
+              )}
+
+              {!loading &&
+                !error &&
+                activeTab === 'kdt' && (
+                  <KdtManagement
+                    kdtMonthly={kdtMonthly}
+                    formatKRW={formatKRW}
+                  />
+                )}
+
+                {!loading &&
+                  !error &&
+                  activeTab === 'settings' && (
+                    <Settings
+                      mode={mode}
+                      deletedHistory={[]}
+                      loadData={loadData}
+                    />
+                  )}
+                  {!loading &&
+                    !error &&
+                    activeTab === 'monitoring' && (
+                      <Monitoring
+                        monitoring={monitoring}
+                        executeAction={executeAction}
+                        loadData={loadData}
+                        formatKRW={formatKRW}
+                        mode = {mode}
+                      />
+                  )}
         </main>
       </div>
 
