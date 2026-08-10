@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import ReportView from '../report/ReportView';
-//import { gasRun } from '../../api/bmsApi';   // 내일 Code.gs 받으면
+import { gasRun } from '../../api/bmsApi';
 export default function PdetailPanel({ pdetail, setPdetail, pField, saveProject, psaving, dday, ddColor, ddText, normalizeStage }) {
             const [rep, setRep] = useState(null);
             const [repState, setRepState] = useState('loading'); // loading | found | none | notfound

@@ -66,10 +66,6 @@ export default function App() {
     try {
       const data = await readAllIntegratedData();
 
-      console.log('통합 데이터:', data);
-      console.log('통합 projects:', data.projects);
-      console.log('데이터 소스:', data.dataSources);
-
       setProjects(
         Array.isArray(data.projects) ? data.projects : [],
       );
@@ -100,8 +96,6 @@ export default function App() {
           ? data.targets
           : [],
       );
-
-      console.log('BMS 실제 데이터:', data);
     } catch (err) {
       console.error('BMS 데이터 로드 실패:', err);
 
@@ -248,6 +242,7 @@ export default function App() {
                         loadData={loadData}
                         formatKRW={formatKRW}
                         mode = {mode}
+                        projects={projects}
                       />
                   )}
                   {!loading &&

@@ -59,7 +59,6 @@ export default function ProgressBoard({ projects, formatKRW, loadData, setActive
                 if (!hosted) return;
 
                 if (!force && Array.isArray(window.__pendingCache)) {
-                    console.log('캐시 사용:', window.__pendingCache);
                     setMons(window.__pendingCache);
                     return;
                 }
@@ -69,17 +68,13 @@ export default function ProgressBoard({ projects, formatKRW, loadData, setActive
 
                 try {
                     const list = await gasRun('apiReadPendingDecisions');
-
-                    console.log('apiReadPendingDecisions 응답:', list);
-
                     const arr = Array.isArray(list) ? list : [];
 
-                    console.log('결정 대기 배열:', arr);
 
                     window.__pendingCache = arr;
                     setMons(arr);
                     setMsg('');
-                } catch (e) {
+                } catch (e) {  
                     console.error('결정 대기 로드 실패:', e);
 
                     setMsg(
@@ -119,7 +114,7 @@ export default function ProgressBoard({ projects, formatKRW, loadData, setActive
                     return { ...p, _due: dueD, _present: prD, _presentPassed: presentPassed, _eff: eff };
                 })
                 .sort((a, b) => b._eff - a._eff || (a._due ?? 9999) - (b._due ?? 9999)), [projects]);
-
+               
             // 발표일 경과 + 단계='제안 중' → '결과 대기'로 자동 전환(화면 열 때 즉시). 중복 실행 방지 가드.
             const flipBusy = useRef(false);
             useEffect(() => {
@@ -146,7 +141,7 @@ export default function ProgressBoard({ projects, formatKRW, loadData, setActive
                 const bidNo = m['공고번호'] || '';
                 setSimModal(null); setApproving(bidNo); setMsg('승인 처리 중…');
                 try {
-                    const payload = { name: m['사업명'], bidNo: bidNo, client: m['발주처'], budget: m['예산'], folderUrl: m['첨부폴더'], reviewerFinal: rf, dueDate: m['마감일'] || '' };
+                    const payload = { name: m['사업명'], bidNo: bidNo, client: m['발주처'], budget: m['예산'], folderUrl: m['첨부폴더'], reviewerFinal: rf, dueDate: m['마감일'] || '', spreadsheetId: m.spreadsheetId };
                     if (linkRowIndex) payload.linkRowIndex = linkRowIndex;
                     const r = await gasRun('apiApproveToProposal', payload);
                     setMsg((r && r.message) || '승인 완료');
