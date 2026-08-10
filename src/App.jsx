@@ -229,6 +229,7 @@ export default function App() {
                   activeTab === 'settings' && (
                     <Settings
                       mode={mode}
+                      setMode = {setMode}
                       deletedHistory={[]}
                       loadData={loadData}
                     />
