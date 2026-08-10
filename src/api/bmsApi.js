@@ -36,6 +36,10 @@ export async function readAllData() {
   return parseResponse(response);
 }
 
+export async function readAllIntegratedData() {
+  return gasRun('apiReadAllIntegrated');
+}
+
 export async function executeBmsAction(action, payload = {}) {
   if (!action) {
     throw new Error('실행할 action이 필요합니다.');

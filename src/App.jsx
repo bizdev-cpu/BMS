@@ -13,8 +13,10 @@ import Monitoring from './pages/Monitoring';
 
 import {
   executeBmsAction,
-  readAllData,
+  readAllData, readAllIntegratedData
 } from './api/bmsApi';
+
+import DataSourceManager from './pages/DataSourceManager';
 
 import { formatKRW } from './util/format';
 
@@ -27,6 +29,7 @@ const menus = [
   { id: 'rental', label: '대관사업 관리', icon: 'rental' },
   { id: 'kdt', label: 'KDT 관리', icon: 'kdt' },
   { id: 'monitoring', label: '제안 모니터링', icon: 'info' },
+  { id: 'dataSource', label: '데이터 소스 관리', icon: 'database'},
   { id: 'settings', label: '시스템 설정', icon: 'settings' },
 ];
 
@@ -61,7 +64,11 @@ export default function App() {
     setError('');
 
     try {
-      const data = await readAllData();
+      const data = await readAllIntegratedData();
+
+      console.log('통합 데이터:', data);
+      console.log('통합 projects:', data.projects);
+      console.log('데이터 소스:', data.dataSources);
 
       setProjects(
         Array.isArray(data.projects) ? data.projects : [],
@@ -193,7 +200,7 @@ export default function App() {
 
           {!loading &&
             !error &&
-            !['dashboard', 'projects','rental', 'kdt', 'settings', 'monitoring'].includes(activeTab) && (
+            !['dashboard', 'projects','rental', 'kdt', 'settings', 'monitoring', 'dataSource'].includes(activeTab) && (
               <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-400">
                 {
                   menus.find(
@@ -243,6 +250,11 @@ export default function App() {
                         mode = {mode}
                       />
                   )}
+                  {!loading &&
+                    !error &&
+                    activeTab === 'dataSource' && (
+                      <DataSourceManager />
+                    )}
         </main>
       </div>
 

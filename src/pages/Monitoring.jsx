@@ -5,7 +5,7 @@ import ProgressBoard from '../components/monitoring/ProgressBoard';
 import MonitoringDashboard from '../components/monitoring/MonitoringDashboard';
 import ReportView from '../components/report/ReportView';
 import SortTh from '../components/SortTh';
-
+import DataSourceManager from './DataSourceManager';
 import {
   applySort,
   useSortable,
