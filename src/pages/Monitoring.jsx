@@ -27,6 +27,7 @@ export default function Monitoring({
   mode,
   projects,
   executeAction,
+  monitoring,
 }) {
   const hosted = mode === 'api';
 
@@ -257,10 +258,10 @@ export default function Monitoring({
     setBusy(true);
 
     try {
-      const list =
-        await gasRun('apiReadMonitoring');
+      // App에서 통합 + 부서 필터된 monitoring 사용
+      const list = monitoring || [];
 
-      const norm = (list || []).map((row) => {
+      const norm = list.map((row) => {
         const o = { ...row };
 
         for (const k in o) {
@@ -373,7 +374,7 @@ export default function Monitoring({
     loadCfg();
     loadTrig();
     loadLlmStats();
-  }, []);
+  }, [monitoring]);
 
   const fmtRemain = (s) => {
     if (s == null) return '';

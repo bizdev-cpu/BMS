@@ -134,7 +134,6 @@ export default function App() {
   const [selectedSourceId, setSelectedSourceId] = useState('all');
   const [dataSources, setDataSources] = useState([]);
 
-  // 데이터 필터링
   const filteredProjects = useMemo(() => {
     if (selectedSourceId === 'all') {
       return projects;
@@ -164,6 +163,16 @@ export default function App() {
       (item) => item.sourceId === selectedSourceId,
     );
   }, [monitoring, selectedSourceId]);
+
+  const filteredTargets = useMemo(() => {
+    if (selectedSourceId === 'all') {
+      return targets;
+    }
+
+    return targets.filter(
+      (item) => item.sourceId === selectedSourceId,
+    );
+  }, [targets, selectedSourceId]);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-800">
@@ -215,12 +224,12 @@ export default function App() {
             !error &&
             activeTab === 'dashboard' && (
               <Dashboard
-                projects={projects}
+                projects={filteredProjects}
                 rentals={rentals}
                 kdt={kdt}
                 kdtMonthly={kdtMonthly}
                 monitoring={monitoring}
-                targets={targets}
+                targets={filteredTargets}
                 selectedYear={selectedYear}
                 formatKRW={formatKRW}
               />
@@ -230,7 +239,7 @@ export default function App() {
             !error &&
             activeTab === 'projects' && (
               <ProjectManagement
-                projects={projects}
+                projects={filteredProjects}
                 executeAction={executeAction}
                 formatKRW={formatKRW}
                 selectedYear={selectedYear}
@@ -254,7 +263,7 @@ export default function App() {
               !error &&
               activeTab === 'rental' && (
                 <RentalManagement
-                  rentals={rentals}
+                  rentals={filteredRentals}
                   executeAction={executeAction}
                   formatKRW={formatKRW}
                 />
@@ -283,12 +292,12 @@ export default function App() {
                     !error &&
                     activeTab === 'monitoring' && (
                       <Monitoring
-                        monitoring={monitoring}
+                        monitoring={filteredMonitoring}
                         executeAction={executeAction}
                         loadData={loadData}
                         formatKRW={formatKRW}
                         mode = {mode}
-                        projects={projects}
+                        projects={filteredProjects}
                       />
                   )}
                   {!loading &&

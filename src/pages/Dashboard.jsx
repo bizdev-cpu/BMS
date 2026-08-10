@@ -212,8 +212,9 @@ export default function Dashboard({
             // 연도별 목표액 및 달성률 (예상 포함 / 현재시점)
             //  - 발생: 제안(수주)+대관+KDT발생  |  예상: + KDT예상 + 제안예상(파이프라인)
             const targetInfo = useMemo(() => {
-                const matched = targets.find(t => t.year === selectedYear);
-                const targetValue = matched ? matched.target : 0;
+                const targetValue = targets
+                    .filter(t => t.year === selectedYear)
+                    .reduce((sum, t) => sum + (Number(t.target) || 0), 0);
                 const P = monthlyStats.projectTotal;          // 제안(수주)
                 const R = monthlyStats.rentalTotal;           // 대관
                 const Kact = monthlyStats.kdtTotal;           // KDT 발생
