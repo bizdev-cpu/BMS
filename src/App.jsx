@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -96,6 +96,13 @@ export default function App() {
           ? data.targets
           : [],
       );
+
+      setDataSources(
+        Array.isArray(data.dataSources)
+          ? data.dataSources
+          : [],
+      );
+
     } catch (err) {
       console.error('BMS 데이터 로드 실패:', err);
 
@@ -124,12 +131,50 @@ export default function App() {
     return result;
   };
 
+  const [selectedSourceId, setSelectedSourceId] = useState('all');
+  const [dataSources, setDataSources] = useState([]);
+
+  // 데이터 필터링
+  const filteredProjects = useMemo(() => {
+    if (selectedSourceId === 'all') {
+      return projects;
+    }
+
+    return projects.filter(
+      (item) => item.sourceId === selectedSourceId,
+    );
+  }, [projects, selectedSourceId]);
+
+  const filteredRentals = useMemo(() => {
+    if (selectedSourceId === 'all') {
+      return rentals;
+    }
+
+    return rentals.filter(
+      (item) => item.sourceId === selectedSourceId,
+    );
+  }, [rentals, selectedSourceId]);
+
+  const filteredMonitoring = useMemo(() => {
+    if (selectedSourceId === 'all') {
+      return monitoring;
+    }
+
+    return monitoring.filter(
+      (item) => item.sourceId === selectedSourceId,
+    );
+  }, [monitoring, selectedSourceId]);
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-800">
       <Header
         selectedYear={selectedYear}
         setSelectedYear={setSelectedYear}
         mode={mode}
+
+        dataSources={dataSources}
+        selectedSourceId={selectedSourceId}
+        setSelectedSourceId={setSelectedSourceId}
       />
 
       <div className="flex flex-1">

@@ -2,6 +2,9 @@ export default function Header({
   selectedYear,
   setSelectedYear,
   mode,
+  dataSources,
+  selectedSourceId,
+  setSelectedSourceId,
 }) {
   const currentYear = new Date().getFullYear();
 
@@ -47,6 +50,22 @@ export default function Header({
               {year}년
             </button>
           ))}
+        </div>
+
+        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-1">
+          <select
+            value={selectedSourceId}
+            onChange={(e) => setSelectedSourceId(e.target.value)}
+            className="rounded-md bg-transparent px-3 py-1 text-sm font-medium text-slate-500 outline-none"
+          >
+            <option value="all">전체 부서 통합</option>
+
+            {dataSources.map((source) => (
+              <option key={source.id} value={source.id}>
+                {source.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <span
