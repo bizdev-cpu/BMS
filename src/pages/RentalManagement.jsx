@@ -38,6 +38,29 @@ export default function RentalManagement({
                 });
             }, [rentals, statusFilter, locationFilter, searchTerm]);
 
+            const rentalSalesSummary = useMemo(() => {
+                let actual = 0;
+                let expected = 0;
+
+                rentals.forEach(rental => {
+                    const sales = Number(rental.sales) || 0;
+
+                    if (rental.status === '확정') {
+                    actual += sales;
+                    }
+
+                    if (rental.status === '대기') {
+                    expected += sales;
+                    }
+                });
+
+                return {
+                    actual,
+                    expected,
+                    total: actual + expected,
+                };
+                }, [rentals]);
+
             const sortedRentals = useMemo(
                 () => applySort(filteredRentals, sort.sortKey, sort.sortDir, rentalSortTypes),
                 [filteredRentals, sort.sortKey, sort.sortDir]
@@ -171,19 +194,79 @@ export default function RentalManagement({
 
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                        {/* 상단 영역 */}
+                        <div className="w-full space-y-6">
+                        {/* 제목 */}
                         <div>
-                            <h2 className="text-3xl font-extrabold text-slate-900">대관사업 관리</h2>
-                            <p className="text-sm text-slate-500">Town Hall, Classroom 등 강의실/행사장 대관 현황 관리</p>
+                            <h2 className="text-3xl font-extrabold text-slate-900">
+                            대관사업 관리
+                            </h2>
+                            <p className="mt-1 text-sm text-slate-500">
+                            Town Hall, Classroom 등 강의실/행사장 대관 현황 관리
+                            </p>
                         </div>
-                        <button
+
+                        {/* 매출 요약 + 등록 버튼 */}
+                        <div className="flex items-center gap-4">
+                            {/* 매출 카드 */}
+                            <div className="grid grid-cols-3 gap-10">
+                            {/* 발생 매출 */}
+                            <div className="w-[360px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                <p className="text-xs font-semibold text-slate-500">
+                                발생 매출
+                                </p>
+
+                                <p className="mt-2 text-2xl font-black text-slate-900">
+                                {formatKRW(rentalSalesSummary.actual)}
+                                </p>
+
+                                <p className="mt-1 text-xs text-slate-400">
+                                확정된 대관 매출
+                                </p>
+                            </div>
+
+                            {/* 예상 매출 */}
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                <p className="text-xs font-semibold text-slate-500">
+                                예상 매출
+                                </p>
+
+                                <p className="mt-2 text-2xl font-black text-slate-900">
+                                {formatKRW(rentalSalesSummary.expected)}
+                                </p>
+
+                                <p className="mt-1 text-xs text-slate-400">
+                                대기 중인 대관 매출
+                                </p>
+                            </div>
+
+                            {/* 합계 */}
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                <p className="text-xs font-semibold text-slate-500">
+                                합계
+                                </p>
+
+                                <p className="mt-2 text-2xl font-black text-brand-600">
+                                {formatKRW(rentalSalesSummary.total)}
+                                </p>
+
+                                <p className="mt-1 text-xs text-slate-400">
+                                발생 + 예상 매출
+                                </p>
+                            </div>
+                            </div>
+
+                            {/* 기존 크기 그대로 */}
+                            <button
                             onClick={openAddForm}
-                            className="flex items-center space-x-2 bg-brand-600 hover:bg-brand-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-brand-600/20 transition-all duration-200"
-                        >
-                            <Icon name="plus" className="w-5 h-5" />
+                            className="ml-auto mr-10 flex shrink-0 items-center space-x-2 rounded-xl bg-brand-600 px-5 py-2.5 font-bold text-white shadow-lg shadow-brand-600/20 transition-all duration-200 hover:bg-brand-500"
+                            >
+                            <Icon name="plus" className="h-5 w-5" />
                             <span>대관 예약 등록</span>
-                        </button>
+                            </button>
+                        </div>
+                        </div>
                     </div>
 
                     {/* 필터 바 */}
