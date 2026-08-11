@@ -38,6 +38,34 @@ export default function RentalManagement({
                 });
             }, [rentals, statusFilter, locationFilter, searchTerm]);
 
+            const rentalSalesSummary = useMemo(() => {
+                let actual = 0;
+                let expected = 0;
+
+                rentals.forEach((rental) => {
+                    const sales = Number(rental.sales);
+
+                    // 매출이 없는 대관은 제외
+                    if (!Number.isFinite(sales) || sales <= 0) {
+                    return;
+                    }
+
+                    // 입금 확정 → 발생 매출
+                    if (rental.paymentConfirmed) {
+                    actual += sales;
+                    } else {
+                    // 매출은 있지만 입금 미확정 → 예상 매출
+                    expected += sales;
+                    }
+                });
+
+                return {
+                    actual,
+                    expected,
+                    total: actual + expected,
+                };
+                }, [rentals]);
+
             const sortedRentals = useMemo(
                 () => applySort(filteredRentals, sort.sortKey, sort.sortDir, rentalSortTypes),
                 [filteredRentals, sort.sortKey, sort.sortDir]
@@ -171,19 +199,79 @@ export default function RentalManagement({
 
             return (
                 <div className="space-y-6 animate-fadeIn">
-                    
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                        {/* 상단 영역 */}
+                        <div className="w-full space-y-6">
+                        {/* 제목 */}
                         <div>
-                            <h2 className="text-3xl font-extrabold text-slate-900">대관사업 관리</h2>
-                            <p className="text-sm text-slate-500">Town Hall, Classroom 등 강의실/행사장 대관 현황 관리</p>
+                            <h2 className="text-3xl font-extrabold text-slate-900">
+                            대관사업 관리
+                            </h2>
+                            <p className="mt-1 text-sm text-slate-500">
+                            Town Hall, Classroom 등 강의실/행사장 대관 현황 관리
+                            </p>
                         </div>
-                        <button
+
+                        {/* 매출 요약 + 등록 버튼 */}
+                        <div className="flex items-center gap-4">
+                            {/* 매출 카드 */}
+                            <div className="grid grid-cols-3 gap-10">
+                            {/* 발생 매출 */}
+                            <div className="w-[360px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                <p className="text-xs font-semibold text-slate-500">
+                                발생 매출
+                                </p>
+
+                                <p className="mt-2 text-2xl font-black text-slate-900">
+                                {formatKRW(rentalSalesSummary.actual)}
+                                </p>
+
+                                <p className="mt-1 text-xs text-slate-400">
+                                입금 확정된 대관 매출
+                                </p>
+                            </div>
+
+                            {/* 예상 매출 */}
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                <p className="text-xs font-semibold text-slate-500">
+                                예상 매출
+                                </p>
+
+                                <p className="mt-2 text-2xl font-black text-slate-900">
+                                {formatKRW(rentalSalesSummary.expected)}
+                                </p>
+
+                                <p className="mt-1 text-xs text-slate-400">
+                                입금 대기 중인 대관 매출
+                                </p>
+                            </div>
+
+                            {/* 합계 */}
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                <p className="text-xs font-semibold text-slate-500">
+                                합계
+                                </p>
+
+                                <p className="mt-2 text-2xl font-black text-brand-600">
+                                {formatKRW(rentalSalesSummary.total)}
+                                </p>
+
+                                <p className="mt-1 text-xs text-slate-400">
+                                발생 + 예상 매출
+                                </p>
+                            </div>
+                            </div>
+
+                            {/* 기존 크기 그대로 */}
+                            <button
                             onClick={openAddForm}
-                            className="flex items-center space-x-2 bg-brand-600 hover:bg-brand-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-brand-600/20 transition-all duration-200"
-                        >
-                            <Icon name="plus" className="w-5 h-5" />
+                            className="ml-auto mr-10 flex shrink-0 items-center space-x-2 rounded-xl bg-brand-600 px-5 py-2.5 font-bold text-white shadow-lg shadow-brand-600/20 transition-all duration-200 hover:bg-brand-500"
+                            >
+                            <Icon name="plus" className="h-5 w-5" />
                             <span>대관 예약 등록</span>
-                        </button>
+                            </button>
+                        </div>
+                        </div>
                     </div>
 
                     {/* 필터 바 */}
@@ -318,11 +406,43 @@ export default function RentalManagement({
                                             <div className="flex flex-col gap-0.5 overflow-hidden">
                                                 {evs.slice(0, 3).map((r, i2) => {
                                                     const conf = r.status === '확정';
+                                                    const isPast = r.endDate && r.endDate < todayYmd;
+
+                                                    // 매출이 입력되어 있는지
+                                                    const hasSales =
+                                                    r.sales != null &&
+                                                    Number(r.sales) > 0;
+
                                                     return (
-                                                        <button key={i2} onClick={() => openEditForm(r)} title={`${r.title} · ${r.location || ''} · ${r.startTime || ''}~${r.endTime || ''}`}
-                                                            className={`text-left text-[10px] leading-tight px-1.5 py-0.5 rounded border truncate ${conf ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
-                                                            <span className="font-semibold">{r.startTime ? r.startTime + ' ' : ''}</span>{r.title}
-                                                        </button>
+                                                    <button
+                                                        key={i2}
+                                                        onClick={() => openEditForm(r)}
+                                                        title={`${r.title} · ${r.location || ''} · ${r.startTime || ''}~${r.endTime || ''}`}
+                                                        className={`text-left text-[10px] leading-tight px-1.5 py-0.5 rounded border truncate ${
+                                                        isPast
+                                                            ? 'bg-slate-200 border-slate-300 text-slate-500'
+                                                            : conf
+                                                            ? 'bg-brand-50 border-brand-200 text-brand-700'
+                                                            : 'bg-amber-50 border-amber-200 text-amber-700'
+                                                        }`}
+                                                    >
+                                                        {/* 매출 상태 */}
+                                                        {hasSales && (
+                                                        <span
+                                                            className={`mr-1 inline-block h-2.5 w-2.5 align-middle rounded-full ${
+                                                            r.paymentConfirmed
+                                                                ? 'bg-emerald-500'
+                                                                : 'bg-orange-400'
+                                                            }`}
+                                                        />
+                                                        )}
+
+                                                        <span className="font-semibold">
+                                                        {r.startTime ? r.startTime + ' ' : ''}
+                                                        </span>
+
+                                                        {r.title}
+                                                    </button>
                                                     );
                                                 })}
                                                 {evs.length > 3 && <span className="text-[10px] text-slate-400 pl-1">+{evs.length - 3}건</span>}
@@ -334,6 +454,16 @@ export default function RentalManagement({
                             <div className="flex items-center gap-4 mt-3 text-[11px] text-slate-500">
                                 <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-brand-100 border border-brand-300"></span>확정</span>
                                 <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-100 border border-amber-300"></span>대기</span>
+                                <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-200 border border-slate-300" ></span>지난 일정</span>
+                                <span className="flex items-center gap-1.5">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                발생 매출
+                                </span>
+
+                                <span className="flex items-center gap-1.5">
+                                <span className="h-2 w-2 rounded-full bg-orange-400" />
+                                예상 매출
+                                </span>
                                 <span className="text-slate-400">· 일정 클릭 시 수정</span>
                             </div>
                         </div>
