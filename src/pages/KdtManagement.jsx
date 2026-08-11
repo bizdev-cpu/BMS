@@ -81,7 +81,7 @@ export default function KdtManagement({ kdtMonthly, formatKRW }) {
             return (
                 <div className="space-y-6 animate-fadeIn">
                     <div>
-                        <h2 className="text-3xl font-extrabold text-slate-900">KDT (K-Digital Training) 관리</h2>
+                        <h2 className="text-3xl font-extrabold text-slate-900">부트캠프 관리</h2>
                         <p className="text-sm text-slate-500">딥다이브 · 카테부 · 케클업 분류별 월 매출 · 현재 월까지는 발생, 이후는 예상</p>
                     </div>
 
@@ -118,7 +118,7 @@ export default function KdtManagement({ kdtMonthly, formatKRW }) {
 
                     <div className="bg-white border border-slate-200 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                            <p className="text-sm font-bold text-slate-700">월별 KDT 매출 (분류별)</p>
+                            <p className="text-sm font-bold text-slate-700">월별 부트캠프 매출 (분류별)</p>
                             <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500 flex-wrap">
                                 {cats.map(c => (
                                     <span key={c.name} className="flex items-center"><span className="w-3 h-3 rounded-sm mr-1.5" style={{ backgroundColor: KDT_COLORS[c.name] || '#f59e0b' }}></span>{c.name}</span>
@@ -127,7 +127,7 @@ export default function KdtManagement({ kdtMonthly, formatKRW }) {
                             </div>
                         </div>
                         {!hasData ? (
-                            <p className="text-sm text-slate-400 font-semibold py-8 text-center">KDT 시트에서 분류별 월 매출을 읽지 못했습니다. 시트의 분류 라벨(딥다이브/카테부/케클업)과 월 범위를 확인하세요.</p>
+                            <p className="text-sm text-slate-400 font-semibold py-8 text-center">부트캠프 시트에서 분류별 월 매출을 읽지 못했습니다. 시트의 분류 라벨(딥다이브/카테부/케클업)과 월 범위를 확인하세요.</p>
                         ) : (
                             <div className="space-y-2.5">
                                 {rows.map((r, i) => {
