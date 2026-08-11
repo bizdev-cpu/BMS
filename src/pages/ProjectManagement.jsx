@@ -1,4 +1,4 @@
-import {useState, useMemo} from 'react';
+import { useState, useMemo } from 'react';
 import Icon from '../components/common/Icon';
 import SortTh from '../components/SortTh';
 
@@ -101,6 +101,33 @@ function ProjectManagement({ projects, executeAction, formatKRW, selectedYear })
                 () => applySort(filteredProjects, sort.sortKey, sort.sortDir, projectSortTypes),
                 [filteredProjects, sort.sortKey, sort.sortDir]
             );
+
+            // 제안사업 매출 요약
+            const projectSalesSummary = useMemo(() => {
+            let actual = 0;
+            let expected = 0;
+
+            parsedProjects.forEach((project) => {
+                const sales = Number(project.computedSales) || 0;
+                const stage = normalizeStage(project.stage);
+
+                // 발생 매출 = 수주
+                if (stage === '수주') {
+                actual += sales;
+                }
+
+                // 예상 매출 = 제안 중 + 결과 대기 중
+                if (stage === '제안 중' || stage === '결과 대기 중') {
+                expected += sales;
+                }
+            });
+
+            return {
+                actual,
+                expected,
+                total: actual + expected,
+            };
+            }, [parsedProjects]);
 
             // 폼 오픈 핸들러 (추가)
             const openAddForm = () => {
@@ -272,7 +299,6 @@ function ProjectManagement({ projects, executeAction, formatKRW, selectedYear })
                     comments: updatedComments
                 };
 
-                executeAction('updateProject', payload);
                 
                 // 모달 갱신용 타겟 상태 반영
                 setCurrentProject(prev => ({ ...prev, comments: updatedComments }));
@@ -282,18 +308,69 @@ function ProjectManagement({ projects, executeAction, formatKRW, selectedYear })
             return (
                 <div className="space-y-6 animate-fadeIn">
                     
-                    {/* 타이틀 및 추가 */}
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-                        <div>
-                            <h2 className="text-3xl font-extrabold text-slate-900">제안 사업</h2>
-                            <p className="text-sm text-slate-500">제안 사업의 제안 시기별 현황 및 매출 분석</p>
+                    <div>
+                        <h2 className="text-3xl font-extrabold text-slate-900">
+                        용역 사업
+                        </h2>
+                        <p className="text-sm text-slate-500">
+                        용역 사업의 제안 시기별 현황 및 매출 분석
+                        </p>
+                    </div>
+
+                    {/* 매출 요약 + 새 사업 등록 */}
+                    <div className="flex w-full items-center gap-4">
+                        {/* 발생 매출 */}
+                        <div className="w-[360px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <p className="text-xs font-semibold text-slate-500">
+                            발생 매출
+                        </p>
+
+                        <p className="mt-2 text-2xl font-black text-slate-900">
+                            {formatKRW(projectSalesSummary.actual)}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-400">
+                            수주된 제안사업 매출
+                        </p>
                         </div>
+
+                        {/* 예상 매출 */}
+                        <div className="w-[360px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <p className="text-xs font-semibold text-slate-500">
+                            예상 매출
+                        </p>
+
+                        <p className="mt-2 text-2xl font-black text-slate-900">
+                            {formatKRW(projectSalesSummary.expected)}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-400">
+                            제안·결과 대기 중 매출
+                        </p>
+                        </div>
+
+                        {/* 합계 */}
+                        <div className="w-[360px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <p className="text-xs font-semibold text-slate-500">
+                            합계
+                        </p>
+
+                        <p className="mt-2 text-2xl font-black text-brand-600">
+                            {formatKRW(projectSalesSummary.total)}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-400">
+                            발생 + 예상 매출
+                        </p>
+                        </div>
+
+                        {/* 오른쪽 끝 */}
                         <button
-                            onClick={openAddForm}
-                            className="flex items-center space-x-2 bg-brand-600 hover:bg-brand-500 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-brand-600/20 transition-all duration-200"
+                        onClick={openAddForm}
+                        className="ml-auto flex shrink-0 items-center space-x-2 rounded-xl bg-brand-600 px-5 py-2.5 font-bold text-white shadow-lg shadow-brand-600/20 transition-all duration-200 hover:bg-brand-500"
                         >
-                            <Icon name="plus" className="w-5 h-5" />
-                            <span>새 사업 등록</span>
+                        <Icon name="plus" className="h-5 w-5" />
+                        <span>새 사업 등록</span>
                         </button>
                     </div>
 
@@ -329,7 +406,7 @@ function ProjectManagement({ projects, executeAction, formatKRW, selectedYear })
                             <table className="w-full text-left border-collapse text-xs">
                                 <thead>
                                     <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
-                                        <SortTh label="제안시기" colKey="proposalPeriod" sort={sort} className="p-4 w-20" />
+                                        <SortTh label="제안시기" colKey="proposalPeriod" sort={sort} className="p-4 w-24" />
                                         <SortTh label="유형" colKey="type" sort={sort} className="p-4 w-16" />
                                         <SortTh label="사업명 (발주처)" colKey="name" sort={sort} className="p-4" />
                                         <SortTh label="사업비" colKey="cost" sort={sort} className="p-4 text-right" align="right" />
