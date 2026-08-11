@@ -72,6 +72,15 @@ export default function App() {
         Array.isArray(data.projects) ? data.projects : [],
       );
 
+      console.log(
+      '대관 매출/입금확정 확인:',
+      data.rentals?.map((rental) => ({
+        title: rental.title,
+        sales: rental.sales,
+        paymentConfirmed: rental.paymentConfirmed,
+      })),
+    );
+
       setRentals(
         Array.isArray(data.rentals) ? data.rentals : [],
       );

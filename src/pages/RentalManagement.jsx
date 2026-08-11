@@ -42,14 +42,19 @@ export default function RentalManagement({
                 let actual = 0;
                 let expected = 0;
 
-                rentals.forEach(rental => {
-                    const sales = Number(rental.sales) || 0;
+                rentals.forEach((rental) => {
+                    const sales = Number(rental.sales);
 
-                    if (rental.status === '확정') {
-                    actual += sales;
+                    // 매출이 없는 대관은 제외
+                    if (!Number.isFinite(sales) || sales <= 0) {
+                    return;
                     }
 
-                    if (rental.status === '대기') {
+                    // 입금 확정 → 발생 매출
+                    if (rental.paymentConfirmed) {
+                    actual += sales;
+                    } else {
+                    // 매출은 있지만 입금 미확정 → 예상 매출
                     expected += sales;
                     }
                 });
@@ -222,7 +227,7 @@ export default function RentalManagement({
                                 </p>
 
                                 <p className="mt-1 text-xs text-slate-400">
-                                확정된 대관 매출
+                                입금 확정된 대관 매출
                                 </p>
                             </div>
 
@@ -237,7 +242,7 @@ export default function RentalManagement({
                                 </p>
 
                                 <p className="mt-1 text-xs text-slate-400">
-                                대기 중인 대관 매출
+                                입금 대기 중인 대관 매출
                                 </p>
                             </div>
 
