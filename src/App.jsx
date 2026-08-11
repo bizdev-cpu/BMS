@@ -65,8 +65,6 @@ export default function App() {
 
     try {
       const data = await readAllIntegratedData();
-      console.log('project 샘플:', data.projects?.[0]);
-      console.log('monitoring 샘플:', data.monitoring?.[0]);
 
       setProjects(
         Array.isArray(data.projects) ? data.projects : [],
