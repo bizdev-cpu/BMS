@@ -65,6 +65,8 @@ export default function App() {
 
     try {
       const data = await readAllIntegratedData();
+      console.log('project 샘플:', data.projects?.[0]);
+      console.log('monitoring 샘플:', data.monitoring?.[0]);
 
       setProjects(
         Array.isArray(data.projects) ? data.projects : [],
@@ -135,14 +137,19 @@ export default function App() {
   const [dataSources, setDataSources] = useState([]);
 
   const filteredProjects = useMemo(() => {
-    if (selectedSourceId === 'all') {
-      return projects;
-    }
+    return projects.filter((item) => {
+      // 연도 필터
+      const matchesYear =
+        String(item.proposalPeriod).trim() === String(selectedYear);
 
-    return projects.filter(
-      (item) => item.sourceId === selectedSourceId,
-    );
-  }, [projects, selectedSourceId]);
+      // 부서 필터
+      const matchesSource =
+        selectedSourceId === 'all' ||
+        item.sourceId === selectedSourceId;
+
+      return matchesYear && matchesSource;
+    });
+}, [projects, selectedYear, selectedSourceId]);
 
   const filteredRentals = useMemo(() => {
     if (selectedSourceId === 'all') {
@@ -155,14 +162,22 @@ export default function App() {
   }, [rentals, selectedSourceId]);
 
   const filteredMonitoring = useMemo(() => {
-    if (selectedSourceId === 'all') {
-      return monitoring;
-    }
+    return monitoring.filter((item) => {
+      // 수집일에서 연도 추출
+      const year = String(item['수집일'] || '').slice(0, 4);
 
-    return monitoring.filter(
-      (item) => item.sourceId === selectedSourceId,
-    );
-  }, [monitoring, selectedSourceId]);
+      // 연도 일치 여부
+      const matchesYear =
+        year === String(selectedYear);
+
+      // 부서 일치 여부
+      const matchesSource =
+        selectedSourceId === 'all' ||
+        item.sourceId === selectedSourceId;
+
+      return matchesYear && matchesSource;
+    });
+  }, [monitoring, selectedYear, selectedSourceId]);
 
   const filteredTargets = useMemo(() => {
     if (selectedSourceId === 'all') {
@@ -228,7 +243,7 @@ export default function App() {
                 rentals={rentals}
                 kdt={kdt}
                 kdtMonthly={kdtMonthly}
-                monitoring={monitoring}
+                monitoring={filteredMonitoring}
                 targets={filteredTargets}
                 selectedYear={selectedYear}
                 formatKRW={formatKRW}

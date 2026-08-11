@@ -9,11 +9,10 @@ export default function Header({
 }) {
   const currentYear = new Date().getFullYear();
 
-  const selectableYears = [
-    currentYear - 2,
-    currentYear - 1,
-    currentYear,
-  ].filter((year) => year !== 2024 && year !== 2025);
+  const selectableYears = Array.from(
+    { length: 5 },
+    (_, index) => currentYear - index,
+  );
 
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur-md">
@@ -36,21 +35,18 @@ export default function Header({
       </div>
 
       <div className="flex items-center space-x-4">
-        <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-1">
-          {selectableYears.map((year) => (
-            <button
-              key={year}
-              type="button"
-              onClick={() => setSelectedYear(year)}
-              className={`rounded-md px-3 py-1 text-sm font-medium transition-all duration-200 ${
-                selectedYear === year
-                  ? 'bg-brand-600 text-white shadow-md'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              {year}년
-            </button>
-          ))}
+            <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-1">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="rounded-md bg-transparent px-3 py-1 text-sm font-medium text-slate-500 outline-none"
+              >
+                {selectableYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}년
+                  </option>
+                ))}
+              </select>
         </div>
 
         <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-1">
