@@ -1,3 +1,4 @@
+import Logo from '../../assets/goormLogo.jpg'
 export default function Header({
   selectedYear,
   setSelectedYear,
@@ -18,7 +19,7 @@ export default function Header({
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur-md">
       <div className="flex items-center space-x-3">
         <img
-          src="/logo.png"
+          src = {Logo}
           alt="AX 사업본부 로고"
           className="h-10 w-10 rounded-lg object-cover"
         />
