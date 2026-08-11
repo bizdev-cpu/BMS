@@ -406,11 +406,43 @@ export default function RentalManagement({
                                             <div className="flex flex-col gap-0.5 overflow-hidden">
                                                 {evs.slice(0, 3).map((r, i2) => {
                                                     const conf = r.status === '확정';
+                                                    const isPast = r.endDate && r.endDate < todayYmd;
+
+                                                    // 매출이 입력되어 있는지
+                                                    const hasSales =
+                                                    r.sales != null &&
+                                                    Number(r.sales) > 0;
+
                                                     return (
-                                                        <button key={i2} onClick={() => openEditForm(r)} title={`${r.title} · ${r.location || ''} · ${r.startTime || ''}~${r.endTime || ''}`}
-                                                            className={`text-left text-[10px] leading-tight px-1.5 py-0.5 rounded border truncate ${conf ? 'bg-brand-50 border-brand-200 text-brand-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
-                                                            <span className="font-semibold">{r.startTime ? r.startTime + ' ' : ''}</span>{r.title}
-                                                        </button>
+                                                    <button
+                                                        key={i2}
+                                                        onClick={() => openEditForm(r)}
+                                                        title={`${r.title} · ${r.location || ''} · ${r.startTime || ''}~${r.endTime || ''}`}
+                                                        className={`text-left text-[10px] leading-tight px-1.5 py-0.5 rounded border truncate ${
+                                                        isPast
+                                                            ? 'bg-slate-200 border-slate-300 text-slate-500'
+                                                            : conf
+                                                            ? 'bg-brand-50 border-brand-200 text-brand-700'
+                                                            : 'bg-amber-50 border-amber-200 text-amber-700'
+                                                        }`}
+                                                    >
+                                                        {/* 매출 상태 */}
+                                                        {hasSales && (
+                                                        <span
+                                                            className={`mr-1 inline-block h-2.5 w-2.5 align-middle rounded-full ${
+                                                            r.paymentConfirmed
+                                                                ? 'bg-emerald-500'
+                                                                : 'bg-orange-400'
+                                                            }`}
+                                                        />
+                                                        )}
+
+                                                        <span className="font-semibold">
+                                                        {r.startTime ? r.startTime + ' ' : ''}
+                                                        </span>
+
+                                                        {r.title}
+                                                    </button>
                                                     );
                                                 })}
                                                 {evs.length > 3 && <span className="text-[10px] text-slate-400 pl-1">+{evs.length - 3}건</span>}
@@ -422,6 +454,16 @@ export default function RentalManagement({
                             <div className="flex items-center gap-4 mt-3 text-[11px] text-slate-500">
                                 <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-brand-100 border border-brand-300"></span>확정</span>
                                 <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-amber-100 border border-amber-300"></span>대기</span>
+                                <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-200 border border-slate-300" ></span>지난 일정</span>
+                                <span className="flex items-center gap-1.5">
+                                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                발생 매출
+                                </span>
+
+                                <span className="flex items-center gap-1.5">
+                                <span className="h-2 w-2 rounded-full bg-orange-400" />
+                                예상 매출
+                                </span>
                                 <span className="text-slate-400">· 일정 클릭 시 수정</span>
                             </div>
                         </div>
