@@ -25,9 +25,9 @@ const APP_UPDATED = '2026-06-26';
 
 const menus = [
   { id: 'dashboard', label: '대시보드', icon: 'dashboard' },
-  { id: 'projects', label: '제안 사업', icon: 'project' },
+  { id: 'projects', label: '용역 사업', icon: 'project' },
   { id: 'rental', label: '대관사업 관리', icon: 'rental' },
-  { id: 'kdt', label: 'KDT 관리', icon: 'kdt' },
+  { id: 'kdt', label: '부트캠프 관리', icon: 'kdt' },
   { id: 'monitoring', label: '제안 모니터링', icon: 'info' },
   { id: 'dataSource', label: '데이터 소스 관리', icon: 'database'},
   { id: 'settings', label: '시스템 설정', icon: 'settings' },
@@ -62,6 +62,8 @@ export default function App() {
   const loadData = async () => {
     setLoading(true);
     setError('');
+
+    const start = performance.now();
 
     try {
       const data = await readAllIntegratedData();
