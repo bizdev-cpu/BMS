@@ -3,6 +3,7 @@ import Icon from '../components/common/Icon';
 import { extractYear, getMonthlyAllocation, isDateInRange, parseDateString, parsePeriodRange, splitKdtMonthly } from '../util/date';
 import { formatKRWShort, niceStep } from '../util/format';
 import { normalizeStage } from '../util/stage';
+import { calculateKdtSalesSummary, calculateProjectSalesSummary, calculateRentalSalesSummary } from '../lib/sales';
 
 export default function Dashboard({ 
     projects = [], 
@@ -12,7 +13,7 @@ export default function Dashboard({
         total: Array(12).fill(0), categories: [],
     }, monitoring = [], 
     targets = [], 
-    selectedYear = [], formatKRW }) {
+    selectedYear = [], formatKRW, kdtSales = [], }) {
             
             // 2026년 이전 데이터 소실 경고 여부
             const showWarning = selectedYear < 2026;
@@ -37,6 +38,25 @@ export default function Dashboard({
                     };
                 });
             }, [projects]);
+
+            // 확정 매출 관련 계산
+            const projectSalesSummary = useMemo(
+                () => calculateProjectSalesSummary(processedProjects),
+                [processedProjects],
+            )
+
+            const rentalSalesSummary = useMemo(
+                () => calculateRentalSalesSummary(rentals),
+                [rentals],
+            )
+
+            const kdtSalesSummary = useMemo(
+                () => calculateKdtSalesSummary(kdtSales),
+                [kdtSales]
+            )
+
+            const confirmedSalesTotal = projectSalesSummary.actual + rentalSalesSummary.actual + kdtSalesSummary.actual;
+            const expectedSalesTotal = projectSalesSummary.expected + rentalSalesSummary.expected + kdtSalesSummary.expected;
 
             // 연도별 및 월별 매출 분석
             const monthlyStats = useMemo(() => {
@@ -334,7 +354,48 @@ export default function Dashboard({
                             <p className="text-sm text-slate-500 mt-1">제안 사업, 대관 및 부트캠프 실적 통합 대시보드</p>
                         </div>
                     </div>
+                    {/* 확정 사업 매출 요약 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+                    {/* 확정 사업 발생 매출 */}
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group hover:border-emerald-500/50 transition-all duration-300">
+                        <div className="absolute -right-4 -bottom-4 opacity-10 text-emerald-600 group-hover:scale-110 transition-transform duration-300">
+                        <Icon name="project" className="w-24 h-24" />
+                        </div>
+
+                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        확정 사업 발생 매출
+                        </span>
+
+                        <div className="text-3xl font-black text-emerald-600 mt-2 tracking-tight">
+                        {formatKRW(confirmedSalesTotal)}
+                        </div>
+
+                        <div className="text-xs text-slate-400 font-medium mt-1">
+                        실제 발생한 확정 사업 매출
+                        </div>
+                    </div>
+
+                    {/* 확정 사업 예상 매출 */}
+                    <div className="bg-white border border-slate-200 rounded-2xl p-6 relative overflow-hidden group hover:border-blue-500/50 transition-all duration-300">
+                        <div className="absolute -right-4 -bottom-4 opacity-10 text-blue-600 group-hover:scale-110 transition-transform duration-300">
+                        <Icon name="project" className="w-24 h-24" />
+                        </div>
+
+                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        확정 사업 예상 매출
+                        </span>
+
+                        <div className="text-3xl font-black text-blue-600 mt-2 tracking-tight">
+                        {formatKRW(expectedSalesTotal)}
+                        </div>
+
+                        <div className="text-xs text-slate-400 font-medium mt-1">
+                        확정됐지만 아직 발생하지 않은 예정 매출
+                        </div>
+                    </div>
+
+                    </div>
                     {/* KPI 카드 섹션 — 총 매출 · KDT · 제안 사업(유형별) · 대관 */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="bg-white border border-slate-200 backdrop-blur-md rounded-2xl p-6 relative overflow-hidden group hover:border-brand-500/50 transition-all duration-300">

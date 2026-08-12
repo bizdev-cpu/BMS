@@ -3,6 +3,7 @@ import Icon from '../components/common/Icon';
 import SortTh from '../components/SortTh';
 import { applySort, useSortable } from '../util/sort';
 import { formatDate } from '../util/format';
+import { calculateRentalSalesSummary } from '../lib/sales';
 
 export default function RentalManagement({ 
     rentals = [], 
@@ -38,33 +39,10 @@ export default function RentalManagement({
                 });
             }, [rentals, statusFilter, locationFilter, searchTerm]);
 
-            const rentalSalesSummary = useMemo(() => {
-                let actual = 0;
-                let expected = 0;
-
-                rentals.forEach((rental) => {
-                    const sales = Number(rental.sales);
-
-                    // 매출이 없는 대관은 제외
-                    if (!Number.isFinite(sales) || sales <= 0) {
-                    return;
-                    }
-
-                    // 입금 확정 → 발생 매출
-                    if (rental.paymentConfirmed) {
-                    actual += sales;
-                    } else {
-                    // 매출은 있지만 입금 미확정 → 예상 매출
-                    expected += sales;
-                    }
-                });
-
-                return {
-                    actual,
-                    expected,
-                    total: actual + expected,
-                };
-                }, [rentals]);
+            const rentalSalesSummary = useMemo(
+                () => calculateRentalSalesSummary(rentals),
+                [rentals],
+            )
 
             const sortedRentals = useMemo(
                 () => applySort(filteredRentals, sort.sortKey, sort.sortDir, rentalSortTypes),

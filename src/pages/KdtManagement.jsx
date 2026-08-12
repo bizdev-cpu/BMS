@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { splitKdtMonthly } from '../util/date';
 import { readKdtChangeReport, createKdtSnapshot } from '../api/bmsApi';
-
+import { calculateKdtSalesSummary } from '../lib/sales';
 
 function KdtSalesTooltip({
   month,
@@ -176,45 +176,13 @@ export default function KdtManagement({
 
     const hasSalesData = kdtSales.length > 0;
 
-    // 전체 실제 발생 매출
-    const actualTotal = kdtSales
-    .filter(item => item.type === '실제')
-    .reduce(
-        (sum, item) => sum + Number(item.amount || 0),
-        0
-    );
-
-    // 전체 예상 매출 - 운영 중
-    const expectedOperatingTotal = kdtSales
-    .filter(
-        item =>
-        item.type === '예상' &&
-        item.status === '운영 중'
-    )
-    .reduce(
-        (sum, item) => sum + Number(item.amount || 0),
-        0
-    );
-
-    // 전체 예상 매출 - 운영 예정
-    const expectedScheduledTotal = kdtSales
-    .filter(
-        item =>
-        item.type === '예상' &&
-        item.status === '운영 예정'
-    )
-    .reduce(
-        (sum, item) => sum + Number(item.amount || 0),
-        0
-    );
-
-    // 전체 예상 매출
-    const expectedTotal =
-    expectedOperatingTotal + expectedScheduledTotal;
-
-    // 연간 합계
-    const grandTotal =
-    actualTotal + expectedTotal;
+    const {
+        actual: actualTotal,
+        expected: expectedTotal,
+        expectedOperating: expectedOperatingTotal,
+        expectedScheduled: expectedScheduledTotal,
+        total: grandTotal,
+    } = calculateKdtSalesSummary(kdtSales);
 
     const services = ['딥다이브', '카테부', '케클업'];
 

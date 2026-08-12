@@ -6,6 +6,7 @@ import { formatDate } from '../util/format';
 import { applySort, useSortable } from '../util/sort';
 import {normalizeStage} from '../util/stage';
 import { parsePeriodRange, extractYear } from '../util/date';
+import { calculateProjectSalesSummary } from '../lib/sales';
 
 function ProjectManagement({ projects, executeAction, formatKRW, selectedYear }) {
             const [filterStage, setFilterStage] = useState('All');
@@ -102,32 +103,10 @@ function ProjectManagement({ projects, executeAction, formatKRW, selectedYear })
                 [filteredProjects, sort.sortKey, sort.sortDir]
             );
 
-            // 제안사업 매출 요약
-            const projectSalesSummary = useMemo(() => {
-            let actual = 0;
-            let expected = 0;
-
-            parsedProjects.forEach((project) => {
-                const sales = Number(project.computedSales) || 0;
-                const stage = normalizeStage(project.stage);
-
-                // 발생 매출 = 수주
-                if (stage === '수주') {
-                actual += sales;
-                }
-
-                // 예상 매출 = 제안 중 + 결과 대기 중
-                if (stage === '제안 중' || stage === '결과 대기 중') {
-                expected += sales;
-                }
-            });
-
-            return {
-                actual,
-                expected,
-                total: actual + expected,
-            };
-            }, [parsedProjects]);
+            const projectSalesSummary = useMemo(
+                () => calculateProjectSalesSummary(parsedProjects),
+                [parsedProjects],
+            );
 
             // 폼 오픈 핸들러 (추가)
             const openAddForm = () => {
