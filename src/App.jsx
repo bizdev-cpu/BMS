@@ -44,6 +44,7 @@ export default function App() {
   const [projects, setProjects] = useState([]);
   const [rentals, setRentals] = useState([]);
   const [kdt, setKdt] = useState([]);
+  const [kdtSales, setKdtSales] = useState([]);
 
   const [kdtMonthly, setKdtMonthly] = useState({
     total: Array(12).fill(0),
@@ -104,6 +105,12 @@ export default function App() {
           ? data.dataSources
           : [],
       );
+
+      setKdtSales(
+        Array.isArray(data.kdtSales)
+        ? data.kdtSales
+        : [],
+      )
 
     } catch (err) {
       console.error('BMS 데이터 로드 실패:', err);
@@ -290,6 +297,7 @@ export default function App() {
                   <KdtManagement
                     kdtMonthly={kdtMonthly}
                     formatKRW={formatKRW}
+                    kdtSales={kdtSales}
                   />
                 )}
 
