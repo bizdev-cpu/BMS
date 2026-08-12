@@ -254,6 +254,7 @@ export default function App() {
                 targets={filteredTargets}
                 selectedYear={selectedYear}
                 formatKRW={formatKRW}
+                kdtSales={kdtSales}
               />
             )}
 

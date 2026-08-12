@@ -3,6 +3,7 @@ import Icon from '../components/common/Icon';
 import { extractYear, getMonthlyAllocation, isDateInRange, parseDateString, parsePeriodRange, splitKdtMonthly } from '../util/date';
 import { formatKRWShort, niceStep } from '../util/format';
 import { normalizeStage } from '../util/stage';
+import { calculateKdtSalesSummary, calculateProjectSalesSummary, calculateRentalSalesSummary } from '../lib/sales';
 
 export default function Dashboard({ 
     projects = [], 
@@ -12,7 +13,7 @@ export default function Dashboard({
         total: Array(12).fill(0), categories: [],
     }, monitoring = [], 
     targets = [], 
-    selectedYear = [], formatKRW }) {
+    selectedYear = [], formatKRW, kdtSales = [], }) {
             
             // 2026년 이전 데이터 소실 경고 여부
             const showWarning = selectedYear < 2026;
@@ -37,6 +38,25 @@ export default function Dashboard({
                     };
                 });
             }, [projects]);
+
+            // 확정 매출 관련 계산
+            const projectSalesSummary = useMemo(
+                () => calculateProjectSalesSummary(processedProjects),
+                [processedProjects],
+            )
+
+            const rentalSalesSummary = useMemo(
+                () => calculateRentalSalesSummary(rentals),
+                [rentals],
+            )
+
+            const kdtSalesSummary = useMemo(
+                () => calculateKdtSalesSummary(kdtSales),
+                [kdtSales]
+            )
+
+            const confirmedSalesTotal = projectSalesSummary.actual + rentalSalesSummary.actual + kdtSalesSummary.actual;
+            const expectedSalesTotal = projectSalesSummary.expected + rentalSalesSummary.expected + kdtSalesSummary.expected;
 
             // 연도별 및 월별 매출 분석
             const monthlyStats = useMemo(() => {
@@ -348,7 +368,7 @@ export default function Dashboard({
                         </span>
 
                         <div className="text-3xl font-black text-emerald-600 mt-2 tracking-tight">
-                        {formatKRW(0)}
+                        {formatKRW(confirmedSalesTotal)}
                         </div>
 
                         <div className="text-xs text-slate-400 font-medium mt-1">
@@ -367,7 +387,7 @@ export default function Dashboard({
                         </span>
 
                         <div className="text-3xl font-black text-blue-600 mt-2 tracking-tight">
-                        {formatKRW(0)}
+                        {formatKRW(expectedSalesTotal)}
                         </div>
 
                         <div className="text-xs text-slate-400 font-medium mt-1">
