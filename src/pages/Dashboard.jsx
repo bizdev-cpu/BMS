@@ -331,7 +331,7 @@ export default function Dashboard({
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
                         <div>
                             <h2 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">{selectedYear}년 사업본부 매출 현황</h2>
-                            <p className="text-sm text-slate-500 mt-1">제안 사업, 대관 및 KDT 실적 통합 대시보드</p>
+                            <p className="text-sm text-slate-500 mt-1">제안 사업, 대관 및 부트캠프 실적 통합 대시보드</p>
                         </div>
                     </div>
 

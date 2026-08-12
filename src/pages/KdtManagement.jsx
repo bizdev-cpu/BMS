@@ -2,18 +2,269 @@ import { useEffect, useState } from 'react';
 import { splitKdtMonthly } from '../util/date';
 import { readKdtChangeReport, createKdtSnapshot } from '../api/bmsApi';
 
-export default function KdtManagement({ kdtMonthly, formatKRW }) {
-            const k = splitKdtMonthly(kdtMonthly);
-            const rows = k.rows;
-            const cats = k.categories || [];
-            const curM = k.curM;
-            const actualTotal = k.actualTotal;
-            const expectedTotal = k.expectedTotal;
-            const grandTotal = k.grandTotal;
-            const maxAmt = rows.reduce((m, r) => Math.max(m, r.amount), 1);
-            const hasData = grandTotal > 0;
-            const KDT_COLORS = { '딥다이브': '#d97706', '카테부': '#f59e0b', '케클업': '#fbbf24' };
-            const hatch = 'repeating-linear-gradient(45deg, rgba(255,255,255,0.65) 0, rgba(255,255,255,0.65) 3px, transparent 3px, transparent 7px)';
+
+function KdtSalesTooltip({
+  month,
+  type,
+  items,
+  formatKRW,
+  colors,
+}) {
+  const services = ['딥다이브', '카테부', '케클업'];
+
+  const total = items.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0
+  );
+
+  return (
+    <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-[210px] rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
+      {/* 제목 */}
+      <p className="text-[11px] font-bold text-slate-700 mb-2">
+        {month}월 ({type})
+      </p>
+
+      <div className="space-y-1.5">
+        {services.map(service => {
+          const serviceItems = items.filter(
+            item => item.service === service
+          );
+
+          const amount = serviceItems.reduce(
+            (sum, item) => sum + Number(item.amount || 0),
+            0
+          );
+
+          const percent =
+            total > 0 ? (amount / total) * 100 : 0;
+
+          return (
+            <div
+              key={service}
+              className="flex items-center justify-between gap-2"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span
+                  className="w-2.5 h-2.5 rounded-sm shrink-0"
+                  style={{
+                    backgroundColor:
+                      colors[service] || '#f59e0b',
+                  }}
+                />
+
+                <span className="text-[11px] font-semibold text-slate-600">
+                  {service}
+                </span>
+
+                <span className="text-[10px] text-slate-400">
+                  ({percent.toFixed(2)}%)
+                </span>
+              </div>
+
+              <span className="text-[11px] font-semibold text-slate-700 whitespace-nowrap">
+                {formatKRW(amount)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="border-t border-slate-200 mt-2 pt-2 flex items-center justify-between">
+        <span className="text-[11px] font-bold text-slate-700">
+          합계
+        </span>
+
+        <span className="text-[11px] font-black text-slate-900">
+          {formatKRW(total)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export default function KdtManagement({
+  kdtMonthly,
+  kdtSales = [],
+  formatKRW,
+}) {
+  // 기존 KDT 월별 데이터
+  const k = splitKdtMonthly(kdtMonthly);
+
+  const rows = k.rows;
+  const cats = k.categories || [];
+  const curM = k.curM;
+
+  const oldactualTotal = k.actualTotal;
+  const oldexpectedTotal = k.expectedTotal;
+  const oldgrandTotal = k.grandTotal;
+
+  const maxAmt = rows.reduce(
+    (m, r) => Math.max(m, r.amount),
+    1
+  );
+
+
+
+  const KDT_COLORS = {
+    딥다이브: '#d97706',
+    카테부: '#f59e0b',
+    케클업: '#fbbf24',
+  };
+
+  const hatch =
+    'repeating-linear-gradient(45deg, rgba(255,255,255,0.65) 0, rgba(255,255,255,0.65) 3px, transparent 3px, transparent 7px)';
+  
+
+    // 새 KDT 매출 집계 데이터를 월별로 변환
+    const salesRows = Array.from({ length: 12 }, (_, index) => {
+    const month = `${index + 1}월`;
+
+    const monthData = kdtSales.filter(
+        item => item.month === month
+    );
+
+    const actualItems = monthData.filter(
+        item => item.type === '실제'
+    );
+
+    const expectedOperatingItems = monthData.filter(
+        item =>
+        item.type === '예상' &&
+        item.status === '운영 중'
+    );
+
+    const expectedScheduledItems = monthData.filter(
+        item =>
+        item.type === '예상' &&
+        item.status === '운영 예정'
+    );
+
+    const actual = actualItems.reduce(
+        (sum, item) => sum + item.amount,
+        0
+    );
+
+    const expectedOperating = expectedOperatingItems.reduce(
+        (sum, item) => sum + item.amount,
+        0
+    );
+
+    const expectedScheduled = expectedScheduledItems.reduce(
+        (sum, item) => sum + item.amount,
+        0
+    );
+
+    return {
+        month: index + 1,
+        actual,
+        expectedOperating,
+        expectedScheduled,
+
+        actualItems,
+        expectedOperatingItems,
+        expectedScheduledItems,
+    };
+    });
+
+    const salesMaxAmt = Math.max(
+    ...salesRows.flatMap(row => [
+        row.actual,
+        row.expectedOperating + row.expectedScheduled,
+    ]),
+    1
+    );
+
+    const hasSalesData = kdtSales.length > 0;
+
+    // 전체 실제 발생 매출
+    const actualTotal = kdtSales
+    .filter(item => item.type === '실제')
+    .reduce(
+        (sum, item) => sum + Number(item.amount || 0),
+        0
+    );
+
+    // 전체 예상 매출 - 운영 중
+    const expectedOperatingTotal = kdtSales
+    .filter(
+        item =>
+        item.type === '예상' &&
+        item.status === '운영 중'
+    )
+    .reduce(
+        (sum, item) => sum + Number(item.amount || 0),
+        0
+    );
+
+    // 전체 예상 매출 - 운영 예정
+    const expectedScheduledTotal = kdtSales
+    .filter(
+        item =>
+        item.type === '예상' &&
+        item.status === '운영 예정'
+    )
+    .reduce(
+        (sum, item) => sum + Number(item.amount || 0),
+        0
+    );
+
+    // 전체 예상 매출
+    const expectedTotal =
+    expectedOperatingTotal + expectedScheduledTotal;
+
+    // 연간 합계
+    const grandTotal =
+    actualTotal + expectedTotal;
+
+    const services = ['딥다이브', '카테부', '케클업'];
+
+        const serviceSummary = services.map(service => {
+        const serviceData = kdtSales.filter(
+            item => item.service === service
+        );
+
+        const actualTotal = serviceData
+            .filter(item => item.type === '실제')
+            .reduce(
+            (sum, item) => sum + Number(item.amount || 0),
+            0
+            );
+
+        const expectedOperatingTotal = kdtSales
+            .filter(
+                item =>
+                item.type === '예상' &&
+                item.status === '운영 중'
+            )
+            .reduce(
+                (sum, item) => sum + Number(item.amount || 0),
+                0
+            );
+
+        const expectedScheduledTotal = kdtSales
+            .filter(
+                item =>
+                item.type === '예상' &&
+                item.status === '운영 예정'
+            )
+            .reduce(
+                (sum, item) => sum + Number(item.amount || 0),
+                0
+            );
+
+        const expectedTotal =
+            expectedOperatingTotal + expectedScheduledTotal;
+
+
+        return {
+            name: service,
+            actualTotal,
+            expectedTotal,
+            grandTotal: actualTotal + expectedTotal,
+        };
+        });
+
+        const [hoveredBar, setHoveredBar] = useState(null);
 
             // 예상값 변동 추적 리포트
             const [kdtReport, setKdtReport] = useState(null);
@@ -86,95 +337,309 @@ export default function KdtManagement({ kdtMonthly, formatKRW }) {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                        <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center h-full">
                             <div className="text-xs font-bold text-slate-500">발생 매출 (현재까지)</div>
                             <div className="text-2xl font-black text-amber-600 mt-1">{formatKRW(actualTotal)}</div>
                         </div>
                         <div className="bg-white border border-slate-200 rounded-2xl p-5">
-                            <div className="text-xs font-bold text-slate-500">예상 매출 (향후 월)</div>
-                            <div className="text-2xl font-black text-slate-500 mt-1">{formatKRW(expectedTotal)}</div>
-                        </div>
-                        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                            <div className="text-xs font-bold text-slate-500">
+                                예상 매출
+                            </div>
+
+                            <div className="text-2xl font-black text-slate-900 mt-1">
+                                {formatKRW(expectedTotal)}
+                            </div>
+
+                            <div className="flex items-center gap-3 mt-2 text-[11px]">
+                                <span className="text-slate-600">
+                                운영 중{' '}
+                                <strong className="text-slate-700">
+                                    {formatKRW(expectedOperatingTotal)}
+                                </strong>
+                                </span>
+
+                                <span className="text-slate-300">·</span>
+
+                                <span className="text-slate-400">
+                                운영 예정{' '}
+                                <strong className="text-slate-500">
+                                    {formatKRW(expectedScheduledTotal)}
+                                </strong>
+                                </span>
+                            </div>
+                            </div>
+                        <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center">
                             <div className="text-xs font-bold text-slate-500">연간 합계</div>
                             <div className="text-2xl font-black text-slate-900 mt-1">{formatKRW(grandTotal)}</div>
                         </div>
                     </div>
 
                     {/* 분류별 요약 */}
-                    {cats.length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {cats.map(c => (
-                                <div key={c.name} className="bg-white border border-slate-200 rounded-2xl p-5">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: KDT_COLORS[c.name] || '#f59e0b' }}></span>
-                                        <span className="text-sm font-bold text-slate-700">{c.name}</span>
-                                    </div>
-                                    <div className="text-xl font-black text-slate-900">{formatKRW(c.grandTotal)}</div>
-                                    <div className="text-[11px] text-slate-500 mt-1">발생 {formatKRW(c.actualTotal)} · 예상 {formatKRW(c.expectedTotal)}</div>
-                                </div>
-                            ))}
+                    {serviceSummary.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {cats.map(c => (
+                        <div
+                            key={c.name}
+                            className="bg-white border border-slate-200 rounded-2xl p-5"
+                        >
+                            <div className="flex items-center gap-2 mb-1">
+                            <span
+                                className="w-3 h-3 rounded-sm"
+                                style={{
+                                backgroundColor:
+                                    KDT_COLORS[c.name] || '#f59e0b',
+                                }}
+                            />
+                            <span className="text-sm font-bold text-slate-700">
+                                {c.name}
+                            </span>
+                            </div>
+
+                            <div className="text-xl font-black text-slate-900">
+                            {formatKRW(c.grandTotal)}
+                            </div>
+
+                            <div className="text-[11px] text-slate-500 mt-1">
+                            발생 {formatKRW(c.actualTotal)} · 예상{' '}
+                            {formatKRW(c.expectedTotal)}
+                            </div>
                         </div>
+                        ))}
+                    </div>
                     )}
 
                     <div className="bg-white border border-slate-200 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-                            <p className="text-sm font-bold text-slate-700">월별 부트캠프 매출 (분류별)</p>
-                            <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500 flex-wrap">
-                                {cats.map(c => (
-                                    <span key={c.name} className="flex items-center"><span className="w-3 h-3 rounded-sm mr-1.5" style={{ backgroundColor: KDT_COLORS[c.name] || '#f59e0b' }}></span>{c.name}</span>
-                                ))}
-                                <span className="flex items-center text-slate-400"><span className="w-3 h-3 rounded-sm mr-1.5" style={{ backgroundColor: '#fbbf24', backgroundImage: hatch }}></span>빗금=예상</span>
+                            <p className="text-sm font-bold text-slate-700">
+                            월별 부트캠프 매출
+                            </p>
+
+                            <div className="flex items-center gap-4 text-[11px] font-bold text-slate-500 flex-wrap">
+                            <span className="flex items-center">
+                                <span className="w-3 h-3 rounded-sm mr-1.5 bg-amber-500" />
+                                실제 발생
+                            </span>
+
+                            <span className="flex items-center">
+                                <span
+                                className="w-3 h-3 rounded-sm mr-1.5 bg-amber-400"
+                                style={{ backgroundImage: hatch }}
+                                />
+                                예상
+                            </span>
+
+                            <span className="text-slate-400">
+                                예상: 운영 중 / 운영 예정 구분
+                            </span>
                             </div>
                         </div>
-                        {!hasData ? (
-                            <p className="text-sm text-slate-400 font-semibold py-8 text-center">부트캠프 시트에서 분류별 월 매출을 읽지 못했습니다. 시트의 분류 라벨(딥다이브/카테부/케클업)과 월 범위를 확인하세요.</p>
+
+                        {!hasSalesData ? (
+                            <p className="text-sm text-slate-400 font-semibold py-8 text-center">
+                            KDT 매출 집계 데이터를 읽지 못했습니다.
+                            </p>
                         ) : (
-                            <div className="space-y-2.5">
-                                {rows.map((r, i) => {
-                                    const expected = i > curM;
-                                    return (
-                                        <div key={r.month} className="flex items-center gap-3 group relative">
-                                            <div className="w-10 shrink-0 text-xs font-bold text-slate-600">{r.month}월</div>
-                                            <div className="flex-grow relative">
-                                                <div className="h-6 bg-slate-100 rounded-md overflow-hidden flex">
-                                                    {cats.map(c => {
-                                                        const amt = (c.monthly || [])[i] || 0; if (amt <= 0) return null;
-                                                        const style = { width: `${(amt / maxAmt) * 100}%`, backgroundColor: KDT_COLORS[c.name] || '#f59e0b' };
-                                                        if (expected) style.backgroundImage = hatch;
-                                                        return <div key={c.name} className="h-full" style={style}></div>;
+                            <div className="space-y-5">
+                            {salesRows.map(row => {
+                                const expectedTotal =
+                                row.expectedOperating +
+                                row.expectedScheduled;
+
+                                return (
+                                <div
+                                    key={row.month}
+                                    className="flex items-start gap-3"
+                                >
+                                    {/* 월 */}
+                                    <div className="w-10 shrink-0 pt-1 text-xs font-bold text-slate-600">
+                                    {row.month}월
+                                    </div>
+
+                                    {/* 막대 영역 */}
+                                    <div className="flex-grow space-y-2">
+                                        <div
+                                            className="flex items-center gap-2 relative"
+                                            onMouseEnter={() =>
+                                                setHoveredBar({
+                                                month: row.month,
+                                                type: '발생',
+                                                })
+                                            }
+                                            onMouseLeave={() => setHoveredBar(null)}
+                                            >
+                                            <div className="w-10 shrink-0 text-[10px] font-semibold text-amber-600">
+                                                발생
+                                            </div>
+
+                                            <div className="flex-grow h-6 bg-slate-100 rounded-md overflow-hidden flex">
+                                                {row.actualItems.map((item, index) => {
+                                                    if (item.amount <= 0) return null;
+
+                                                    return (
+                                                    <div
+                                                        key={`${item.service}-${index}`}
+                                                        className="h-full"
+                                                        style={{
+                                                        width: `${(item.amount / salesMaxAmt) * 100}%`,
+                                                        backgroundColor:
+                                                            KDT_COLORS[item.service] || '#f59e0b',
+                                                        }}
+                                                    />
+                                                    );
+                                                })}
+                                            </div>
+
+                                            <div className="w-28 shrink-0 text-right text-xs font-bold text-slate-700">
+                                                {formatKRW(row.actual)}
+                                            </div>
+
+                                            {hoveredBar?.month === row.month &&
+                                                hoveredBar?.type === '발생' && (
+                                                <KdtSalesTooltip
+                                                    month={row.month}
+                                                    type="발생"
+                                                    items={row.actualItems}
+                                                    formatKRW={formatKRW}
+                                                    colors={KDT_COLORS}
+                                                />
+                                                )}
+                                            </div>
+
+                                            {/* 예상 */}
+                                            <div
+                                                className="flex items-center gap-2 relative"
+                                                onMouseEnter={() =>
+                                                    setHoveredBar({
+                                                        month: row.month,
+                                                        type: '예상',
+                                                    })
+                                                }
+                                                onMouseLeave={() => setHoveredBar(null)}
+                                            >
+                                                <div className="w-10 shrink-0 text-[10px] font-semibold text-slate-400">
+                                                    예상
+                                                </div>
+
+                                                <div className="flex-grow h-6 bg-slate-100 rounded-md overflow-hidden flex">
+
+                                                    {/* 운영 중 예상 */}
+                                                    {row.expectedOperatingItems.map((item, index) => {
+                                                        if (item.amount <= 0) return null;
+
+                                                        return (
+                                                            <div
+                                                                key={`operating-${item.service}-${index}`}
+                                                                className="h-full"
+                                                                style={{
+                                                                    width: `${(item.amount / salesMaxAmt) * 100}%`,
+                                                                    backgroundColor:
+                                                                        KDT_COLORS[item.service] || '#f59e0b',
+                                                                    backgroundImage: hatch,
+                                                                }}
+                                                            />
+                                                        );
+                                                    })}
+
+                                                    {/* 운영 예정 예상 */}
+                                                    {row.expectedScheduledItems.map((item, index) => {
+                                                        if (item.amount <= 0) return null;
+
+                                                        return (
+                                                            <div
+                                                                key={`scheduled-${item.service}-${index}`}
+                                                                className="h-full opacity-50"
+                                                                style={{
+                                                                    width: `${(item.amount / salesMaxAmt) * 100}%`,
+                                                                    backgroundColor:
+                                                                        KDT_COLORS[item.service] || '#f59e0b',
+                                                                    backgroundImage: hatch,
+                                                                }}
+                                                            />
+                                                        );
                                                     })}
                                                 </div>
-                                                {/* 호버 툴팁: 분류별 금액 범례 */}
-                                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 bg-white border border-slate-200 rounded-xl p-3 shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-30 text-left min-w-[200px]">
-                                                    <div className="text-[11px] font-bold text-slate-500 mb-1">{r.month}월 {expected ? '(예상)' : '(발생)'}</div>
-                                                    <div className="text-[10px] space-y-1">
-                                                        {cats.map(c => {
-                                                            const amt = (c.monthly || [])[i] || 0;
-                                                            return (
-                                                                <div key={c.name} className="flex justify-between gap-3">
-                                                                    <span className="flex items-center font-semibold" style={{ color: KDT_COLORS[c.name] || '#d97706' }}>
-                                                                        <span className="w-2.5 h-2.5 rounded-sm mr-1.5" style={{ backgroundColor: KDT_COLORS[c.name] || '#f59e0b' }}></span>{c.name}
-                                                                        {r.amount > 0 ? <span className="ml-1 text-slate-400">({((amt / r.amount) * 100).toFixed(2)}%)</span> : null}
-                                                                    </span>
-                                                                    <span className="text-slate-700">{formatKRW(amt)}</span>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                        <div className="flex justify-between pt-1 border-t border-slate-200 font-bold text-slate-900"><span>합계</span><span>{formatKRW(r.amount)}</span></div>
-                                                    </div>
+
+                                                <div className="w-28 shrink-0 text-right text-xs font-bold text-slate-500">
+                                                    {formatKRW(expectedTotal)}
                                                 </div>
+
+                                                {hoveredBar?.month === row.month &&
+                                                    hoveredBar?.type === '예상' && (
+                                                        <KdtSalesTooltip
+                                                            month={row.month}
+                                                            type="예상"
+                                                            items={[
+                                                                ...row.expectedOperatingItems,
+                                                                ...row.expectedScheduledItems,
+                                                            ]}
+                                                            formatKRW={formatKRW}
+                                                            colors={KDT_COLORS}
+                                                        />
+                                                    )}
                                             </div>
-                                            <div className="w-44 shrink-0 text-right text-xs font-bold text-slate-700">
-                                                {formatKRW(r.amount)} <span className={`ml-1 text-[10px] font-semibold ${expected ? 'text-slate-400' : 'text-amber-600'}`}>{expected ? '예상' : '발생'}</span>
-                                            </div>
+
+                                    {/* 예상 상태 표시 */}
+                                    {expectedTotal > 0 && (
+                                        <div className="pl-12 flex gap-3 text-[10px] text-slate-400">
+                                        {row.expectedOperating > 0 && (
+                                            <span>
+                                            운영 중 {formatKRW(row.expectedOperating)}
+                                            </span>
+                                        )}
+
+                                        {row.expectedScheduled > 0 && (
+                                            <span>
+                                            운영 예정 {formatKRW(row.expectedScheduled)}
+                                            </span>
+                                        )}
                                         </div>
-                                    );
-                                })}
+                                    )}
+                                    </div>
+                                </div>
+                                );
+                            })}
                             </div>
                         )}
-                        <p className="text-[11px] text-slate-400 mt-4">* 데이터는 KDT 시트에서 직접 수정합니다(이 화면은 조회 전용). 합계는 소수점 이하 버림.</p>
-                    </div>
 
+                        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-slate-500">
+                            {/* 실제 발생 */}
+                            <div className="flex items-center gap-2">
+                                <div
+                                className="w-8 h-3 rounded-sm"
+                                style={{ backgroundColor: '#d97706' }}
+                                />
+                                <span>실제 발생 매출</span>
+                            </div>
+
+                            {/* 예상 - 운영 중 */}
+                            <div className="flex items-center gap-2">
+                                <div
+                                className="w-8 h-3 rounded-sm"
+                                style={{
+                                    backgroundColor: '#d97706',
+                                    backgroundImage: hatch,
+                                }}
+                                />
+                                <span>예상 매출 · 운영 중</span>
+                            </div>
+
+                            {/* 예상 - 운영 예정 */}
+                            <div className="flex items-center gap-2">
+                                <div
+                                className="w-8 h-3 rounded-sm opacity-40"
+                                style={{
+                                    backgroundColor: '#d97706',
+                                    backgroundImage: hatch,
+                                }}
+                                />
+                                <span>예상 매출 · 운영 예정</span>
+                            </div>
+
+                            <p className="w-full text-slate-400">
+                                * 실제/예상 매출 데이터는 KDT 매출 집계 시트를 기준으로 표시합니다.
+                            </p>
+                            </div>
+                    </div>
                     {/* 예상값 변동 추적 리포트 */}
                     <div className="bg-white border border-slate-200 rounded-2xl p-6">
                         <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
