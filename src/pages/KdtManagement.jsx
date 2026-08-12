@@ -106,9 +106,9 @@ export default function KdtManagement({
 
 
   const KDT_COLORS = {
-    딥다이브: '#d97706',
-    카테부: '#f59e0b',
-    케클업: '#fbbf24',
+    딥다이브: '#2563eb', // 파랑
+    카테부: '#f59e0b',   // 주황
+    케클업: '#10b981',   // 초록
   };
 
   const hatch =
@@ -230,7 +230,7 @@ export default function KdtManagement({
             0
             );
 
-        const expectedOperatingTotal = kdtSales
+        const expectedOperatingTotal = serviceData
             .filter(
                 item =>
                 item.type === '예상' &&
@@ -241,7 +241,7 @@ export default function KdtManagement({
                 0
             );
 
-        const expectedScheduledTotal = kdtSales
+        const expectedScheduledTotal = serviceData
             .filter(
                 item =>
                 item.type === '예상' &&
@@ -260,6 +260,8 @@ export default function KdtManagement({
             name: service,
             actualTotal,
             expectedTotal,
+            expectedOperatingTotal,
+            expectedScheduledTotal,
             grandTotal: actualTotal + expectedTotal,
         };
         });
@@ -333,7 +335,7 @@ export default function KdtManagement({
                 <div className="space-y-6 animate-fadeIn">
                     <div>
                         <h2 className="text-3xl font-extrabold text-slate-900">부트캠프 관리</h2>
-                        <p className="text-sm text-slate-500">딥다이브 · 카테부 · 케클업 분류별 월 매출 · 현재 월까지는 발생, 이후는 예상</p>
+                        <p className="text-sm text-slate-500">딥다이브 · 카테부 · 케클업 분류별 월 매출 · 실제 발생 매출과 예상 매출(운영 중/운영 예정)을 구분하여 표시</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -369,7 +371,7 @@ export default function KdtManagement({
                             </div>
                             </div>
                         <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-center">
-                            <div className="text-xs font-bold text-slate-500">연간 합계</div>
+                            <div className="text-xs font-bold text-slate-500">연간 합계 (발생 매출 + 예상 매출)</div>
                             <div className="text-2xl font-black text-slate-900 mt-1">{formatKRW(grandTotal)}</div>
                         </div>
                     </div>
@@ -377,7 +379,7 @@ export default function KdtManagement({
                     {/* 분류별 요약 */}
                     {serviceSummary.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {cats.map(c => (
+                        {serviceSummary.map(c => (
                         <div
                             key={c.name}
                             className="bg-white border border-slate-200 rounded-2xl p-5"
@@ -400,8 +402,16 @@ export default function KdtManagement({
                             </div>
 
                             <div className="text-[11px] text-slate-500 mt-1">
-                            발생 {formatKRW(c.actualTotal)} · 예상{' '}
-                            {formatKRW(c.expectedTotal)}
+                                발생 {formatKRW(c.actualTotal)}
+                            </div>
+
+                            <div className="text-[11px] text-slate-500 mt-1">
+                                예상 {formatKRW(c.expectedTotal)}
+                                <span className="text-slate-400 ml-1">
+                                    (운영 중 {formatKRW(c.expectedOperatingTotal)}
+                                    {' / '}
+                                    운영 예정 {formatKRW(c.expectedScheduledTotal)})
+                                </span>
                             </div>
                         </div>
                         ))}
@@ -602,37 +612,49 @@ export default function KdtManagement({
                         )}
 
                         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-slate-500">
-                            {/* 실제 발생 */}
-                            <div className="flex items-center gap-2">
+
+                            {/* 서비스 색상 */}
+                            {services.map(service => (
                                 <div
-                                className="w-8 h-3 rounded-sm"
-                                style={{ backgroundColor: '#d97706' }}
+                                key={service}
+                                className="flex items-center gap-2"
+                                >
+                                <div
+                                    className="w-3 h-3 rounded-sm"
+                                    style={{
+                                    backgroundColor: KDT_COLORS[service],
+                                    }}
                                 />
-                                <span>실제 발생 매출</span>
+                                <span>{service}</span>
+                                </div>
+                            ))}
+
+                            <span className="text-slate-300">|</span>
+
+                            {/* 매출 상태 */}
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-3 rounded-sm bg-slate-500" />
+                                <span>실제 발생</span>
                             </div>
 
-                            {/* 예상 - 운영 중 */}
                             <div className="flex items-center gap-2">
                                 <div
-                                className="w-8 h-3 rounded-sm"
+                                className="w-8 h-3 rounded-sm bg-slate-500"
                                 style={{
-                                    backgroundColor: '#d97706',
                                     backgroundImage: hatch,
                                 }}
                                 />
-                                <span>예상 매출 · 운영 중</span>
+                                <span>예상 · 운영 중</span>
                             </div>
 
-                            {/* 예상 - 운영 예정 */}
                             <div className="flex items-center gap-2">
                                 <div
-                                className="w-8 h-3 rounded-sm opacity-40"
+                                className="w-8 h-3 rounded-sm bg-slate-500 opacity-40"
                                 style={{
-                                    backgroundColor: '#d97706',
                                     backgroundImage: hatch,
                                 }}
                                 />
-                                <span>예상 매출 · 운영 예정</span>
+                                <span>예상 · 운영 예정</span>
                             </div>
 
                             <p className="w-full text-slate-400">
