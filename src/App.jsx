@@ -158,15 +158,34 @@ export default function App() {
     });
 }, [projects, selectedYear, selectedSourceId]);
 
+
   const filteredRentals = useMemo(() => {
+    return rentals.filter((item) => {
+      // 대관 시작일의 연도
+      const rentalYear = String(item.startDate || '').slice(0, 4);
+
+      // 연도 필터
+      const matchesYear =
+        rentalYear === String(selectedYear);
+
+      // 부서 필터
+      const matchesSource =
+        selectedSourceId === 'all' ||
+        item.sourceId === selectedSourceId;
+
+      return matchesYear && matchesSource;
+    });
+  }, [rentals, selectedYear, selectedSourceId]);
+
+  const filteredKdtSales = useMemo(() => {
     if (selectedSourceId === 'all') {
-      return rentals;
+      return kdtSales;
     }
 
-    return rentals.filter(
+    return kdtSales.filter(
       (item) => item.sourceId === selectedSourceId,
     );
-  }, [rentals, selectedSourceId]);
+  }, [kdtSales, selectedSourceId]);
 
   const filteredMonitoring = useMemo(() => {
     return monitoring.filter((item) => {
@@ -247,14 +266,14 @@ export default function App() {
             activeTab === 'dashboard' && (
               <Dashboard
                 projects={filteredProjects}
-                rentals={rentals}
+                rentals={filteredRentals}
                 kdt={kdt}
                 kdtMonthly={kdtMonthly}
                 monitoring={filteredMonitoring}
                 targets={filteredTargets}
                 selectedYear={selectedYear}
                 formatKRW={formatKRW}
-                kdtSales={kdtSales}
+                kdtSales={filteredKdtSales}
               />
             )}
 
@@ -298,7 +317,8 @@ export default function App() {
                   <KdtManagement
                     kdtMonthly={kdtMonthly}
                     formatKRW={formatKRW}
-                    kdtSales={kdtSales}
+                    kdtSales={filteredKdtSales}
+                    selectedYear={selectedYear}
                   />
                 )}
 

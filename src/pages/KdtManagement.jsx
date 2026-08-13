@@ -17,6 +17,7 @@ function KdtSalesTooltip({
     0
   );
 
+
   return (
     <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-[210px] rounded-xl border border-slate-200 bg-white p-3 shadow-lg">
       {/* 제목 */}
@@ -86,6 +87,7 @@ export default function KdtManagement({
   kdtMonthly,
   kdtSales = [],
   formatKRW,
+  selectedYear,
 }) {
   // 기존 KDT 월별 데이터
   const k = splitKdtMonthly(kdtMonthly);
@@ -101,6 +103,9 @@ export default function KdtManagement({
   const maxAmt = rows.reduce(
     (m, r) => Math.max(m, r.amount),
     1
+  );
+  const filteredKdtSales = kdtSales.filter(
+    (item) => Number(item.year) === Number(selectedYear),
   );
 
 
@@ -119,7 +124,7 @@ export default function KdtManagement({
     const salesRows = Array.from({ length: 12 }, (_, index) => {
     const month = `${index + 1}월`;
 
-    const monthData = kdtSales.filter(
+    const monthData = filteredKdtSales.filter(
         item => item.month === month
     );
 
@@ -174,7 +179,7 @@ export default function KdtManagement({
     1
     );
 
-    const hasSalesData = kdtSales.length > 0;
+    const hasSalesData = filteredKdtSales.length > 0;
 
     const {
         actual: actualTotal,
@@ -182,12 +187,12 @@ export default function KdtManagement({
         expectedOperating: expectedOperatingTotal,
         expectedScheduled: expectedScheduledTotal,
         total: grandTotal,
-    } = calculateKdtSalesSummary(kdtSales);
+    } = calculateKdtSalesSummary(filteredKdtSales);
 
     const services = ['딥다이브', '카테부', '케클업'];
 
         const serviceSummary = services.map(service => {
-        const serviceData = kdtSales.filter(
+        const serviceData = filteredKdtSales.filter(
             item => item.service === service
         );
 

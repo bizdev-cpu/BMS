@@ -51,8 +51,8 @@ export default function Dashboard({
             )
 
             const kdtSalesSummary = useMemo(
-                () => calculateKdtSalesSummary(kdtSales),
-                [kdtSales]
+                () => calculateKdtSalesSummary(kdtSales, selectedYear),
+                [kdtSales, selectedYear]
             )
 
             const confirmedSalesTotal = projectSalesSummary.actual + rentalSalesSummary.actual + kdtSalesSummary.actual;
@@ -126,27 +126,47 @@ export default function Dashboard({
                     }
                 });
 
-                // 3) KDT 매출 배분 (신 구조: { total, categories[] }) — splitKdtMonthly 사용
-                const _now = new Date();
-                const _curY = _now.getFullYear();
-                const k = splitKdtMonthly(kdtMonthly);
-                const kdtCatNames = (k.categories || []).map(c => c.name);
-                if (k.monthly.some(v => v > 0) || (k.categories || []).length) {
-                    if (selectedYear === _curY) {
-                        k.rows.forEach((r, m) => {
-                            if (r.kind === 'actual') { stats[m].kdtSales += r.amount; kdtTotal += r.amount; }
-                            else { stats[m].kdtEstimate += r.amount; kdtEstimateTotal += r.amount; }
-                        });
-                    } else if (selectedYear < _curY) {
-                        k.monthly.forEach((amt, m) => { stats[m].kdtSales += amt; kdtTotal += amt; });
-                    }
-                    // 분류별 월 금액 기록(연도 무관, 차트용)
-                    if (selectedYear === _curY || selectedYear < _curY) {
-                        (k.categories || []).forEach(c => c.monthly.forEach((amt, m) => {
-                            stats[m].kdtCats[c.name] = (stats[m].kdtCats[c.name] || 0) + amt;
-                        }));
+                // 3) KDT 매출 배분
+                const kdtCatNames = [];
+
+                kdtSales.forEach((item) => {
+                if (Number(item.year) !== Number(selectedYear)) {
+                    return;
+                }
+
+                const month = Number(
+                    String(item.month || '').replace('월', ''),
+                );
+
+                if (month < 1 || month > 12) {
+                    return;
+                }
+
+                const m = month - 1;
+                const amount = Number(item.amount) || 0;
+
+                // 실제 매출
+                if (item.type === '실제') {
+                    stats[m].kdtSales += amount;
+                    kdtTotal += amount;
+                }
+
+                // 예상 매출
+                if (item.type === '예상') {
+                    stats[m].kdtEstimate += amount;
+                    kdtEstimateTotal += amount;
+                }
+
+                // 서비스별 매출
+                if (item.service) {
+                    stats[m].kdtCats[item.service] =
+                    (stats[m].kdtCats[item.service] || 0) + amount;
+
+                    if (!kdtCatNames.includes(item.service)) {
+                    kdtCatNames.push(item.service);
                     }
                 }
+});
 
                 // 총합 계산 + 사업명 내역 정리(동일 사업명 합산 후 금액 내림차순)
                 stats.forEach(s => {
