@@ -158,15 +158,24 @@ export default function App() {
     });
 }, [projects, selectedYear, selectedSourceId]);
 
-  const filteredRentals = useMemo(() => {
-    if (selectedSourceId === 'all') {
-      return rentals;
-    }
 
-    return rentals.filter(
-      (item) => item.sourceId === selectedSourceId,
-    );
-  }, [rentals, selectedSourceId]);
+  const filteredRentals = useMemo(() => {
+    return rentals.filter((item) => {
+      // 대관 시작일의 연도
+      const rentalYear = String(item.startDate || '').slice(0, 4);
+
+      // 연도 필터
+      const matchesYear =
+        rentalYear === String(selectedYear);
+
+      // 부서 필터
+      const matchesSource =
+        selectedSourceId === 'all' ||
+        item.sourceId === selectedSourceId;
+
+      return matchesYear && matchesSource;
+    });
+  }, [rentals, selectedYear, selectedSourceId]);
 
   const filteredKdtSales = useMemo(() => {
     if (selectedSourceId === 'all') {
