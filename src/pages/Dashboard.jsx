@@ -56,6 +56,10 @@ export default function Dashboard({
             )
 
             const confirmedSalesTotal = projectSalesSummary.actual + rentalSalesSummary.actual + kdtSalesSummary.actual;
+            console.log('용역 수주:', projectSalesSummary.actual);
+            console.log('대관 실제:', rentalSalesSummary.actual);
+            console.log('KDT 실제:', kdtSalesSummary.actual);
+            console.log('확정 사업 발생 매출:', confirmedSalesTotal);
             const expectedSalesTotal = projectSalesSummary.expected + rentalSalesSummary.expected + kdtSalesSummary.expected;
 
             // 연도별 및 월별 매출 분석
@@ -448,7 +452,7 @@ export default function Dashboard({
                             <div className="absolute -right-4 -bottom-4 opacity-10 text-violet-600 group-hover:scale-110 transition-transform duration-300">
                                 <Icon name="project" className="w-24 h-24" />
                             </div>
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">제안 사업 매출 (수주)</span>
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">용역 사업 매출 (수주)</span>
                             <div className="text-2xl font-black text-violet-600 mt-2 tracking-tight">{formatKRW(monthlyStats.projectTotal)}</div>
                             {(() => {
                                 const t = monthlyStats.projectByType || {};

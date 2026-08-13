@@ -5,9 +5,15 @@ export function calculateProjectSalesSummary(projects) {
   let expected = 0;
 
   projects.forEach((project) => {
-    const sales = Number(project.computedSales) || 0;
+    
     const stage = normalizeStage(project.stage);
-
+    const sales =
+      Number(project.computedSales) ||
+      Number(project.sales) ||
+      Math.round(
+        ((Number(project.shareRatio) || 0) / 100) *
+        (Number(project.cost) || 0)
+      );
     if (stage === '수주') {
       actual += sales;
     }

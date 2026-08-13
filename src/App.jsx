@@ -145,18 +145,22 @@ export default function App() {
 
   const filteredProjects = useMemo(() => {
     return projects.filter((item) => {
-      // 연도 필터
-      const matchesYear =
-        String(item.proposalPeriod).trim() === String(selectedYear);
+      const proposalPeriod =
+        String(item.proposalPeriod || '').trim();
 
-      // 부서 필터
+      // "2022", "2022-02", "2022-09" 모두 2022로 인식
+      const proposalYear = proposalPeriod.slice(0, 4);
+
+      const matchesYear =
+        proposalYear === String(selectedYear);
+
       const matchesSource =
         selectedSourceId === 'all' ||
         item.sourceId === selectedSourceId;
 
       return matchesYear && matchesSource;
     });
-}, [projects, selectedYear, selectedSourceId]);
+  }, [projects, selectedYear, selectedSourceId]);
 
 
   const filteredRentals = useMemo(() => {
