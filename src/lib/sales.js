@@ -56,15 +56,15 @@ export function calculateKdtSalesSummary(kdtSales, selectedYear) {
   const filteredSales = kdtSales.filter(
     (item) => Number(item.year) === Number(selectedYear),
   );
-  
-  const actual = kdtSales
+
+  const actual = filteredSales
     .filter((item) => item.type === '실제')
     .reduce(
       (sum, item) => sum + Number(item.amount || 0),
       0,
     );
 
-  const expectedOperating = kdtSales
+  const expectedOperating = filteredSales
     .filter(
       (item) =>
         item.type === '예상' &&
@@ -75,7 +75,7 @@ export function calculateKdtSalesSummary(kdtSales, selectedYear) {
       0,
     );
 
-  const expectedScheduled = kdtSales
+  const expectedScheduled = filteredSales
     .filter(
       (item) =>
         item.type === '예상' &&
