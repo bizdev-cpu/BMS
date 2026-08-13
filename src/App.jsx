@@ -10,10 +10,11 @@ import RentalManagement from './pages/RentalManagement';
 import KdtManagement from './pages/KdtManagement';
 import Settings from './pages/Settings';
 import Monitoring from './pages/Monitoring';
+import Login from './pages/Login';
 
 import {
   executeBmsAction,
-  readAllData, readAllIntegratedData
+  readAllData, readAllIntegratedData, getCurrentUser,
 } from './api/bmsApi';
 
 import DataSourceManager from './pages/DataSourceManager';
@@ -37,6 +38,15 @@ export default function App() {
   const [selectedYear, setSelectedYear] = useState(
     new Date().getFullYear(),
   );
+
+  const [currentUser, setCurrentUser] = useState(null);
+  const [idToken, setIdToken] = useState(null);
+  const handleLogin = (credential) => {
+    console.log('로그인 성공');
+    console.log('ID Token:', credential);
+
+    setIdToken(credential);
+  };
 
   const [mode, setMode] = useState('api');
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -219,6 +229,10 @@ export default function App() {
     );
   }, [targets, selectedSourceId]);
 
+  if (!idToken) {
+    return <Login onLogin={handleLogin} />;
+  }
+  
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-800">
       <Header

@@ -123,3 +123,19 @@ export async function gasRun(functionName, ...args) {
 
   return parseResponse(response);
 }
+
+
+export async function getCurrentUser() {
+  const apiUrl = getApiUrl();
+
+  const response = await fetch(
+    `${apiUrl}?action=getCurrentUser`,
+    {
+      method: 'GET',
+      redirect: 'follow',
+      cache: 'no-store',
+    },
+  );
+
+  return parseResponse(response);
+}
