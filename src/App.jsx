@@ -308,6 +308,8 @@ export default function App() {
                   rentals={filteredRentals}
                   executeAction={executeAction}
                   formatKRW={formatKRW}
+                  selectedYear={selectedYear}
+                  setSelectedYear={setSelectedYear}
                 />
               )}
 
