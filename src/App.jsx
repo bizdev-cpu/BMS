@@ -168,6 +168,16 @@ export default function App() {
     );
   }, [rentals, selectedSourceId]);
 
+  const filteredKdtSales = useMemo(() => {
+    if (selectedSourceId === 'all') {
+      return kdtSales;
+    }
+
+    return kdtSales.filter(
+      (item) => item.sourceId === selectedSourceId,
+    );
+  }, [kdtSales, selectedSourceId]);
+
   const filteredMonitoring = useMemo(() => {
     return monitoring.filter((item) => {
       // 수집일에서 연도 추출
@@ -247,14 +257,14 @@ export default function App() {
             activeTab === 'dashboard' && (
               <Dashboard
                 projects={filteredProjects}
-                rentals={rentals}
+                rentals={filteredRentals}
                 kdt={kdt}
                 kdtMonthly={kdtMonthly}
                 monitoring={filteredMonitoring}
                 targets={filteredTargets}
                 selectedYear={selectedYear}
                 formatKRW={formatKRW}
-                kdtSales={kdtSales}
+                kdtSales={filteredKdtSales}
               />
             )}
 
@@ -298,7 +308,8 @@ export default function App() {
                   <KdtManagement
                     kdtMonthly={kdtMonthly}
                     formatKRW={formatKRW}
-                    kdtSales={kdtSales}
+                    kdtSales={filteredKdtSales}
+                    selectedYear={selectedYear}
                   />
                 )}
 

@@ -51,7 +51,7 @@ export default function Dashboard({
             )
 
             const kdtSalesSummary = useMemo(
-                () => calculateKdtSalesSummary(kdtSales),
+                () => calculateKdtSalesSummary(kdtSales, selectedYear),
                 [kdtSales]
             )
 

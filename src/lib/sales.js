@@ -52,7 +52,11 @@ export function calculateRentalSalesSummary(rentals) {
   };
 }
 
-export function calculateKdtSalesSummary(kdtSales) {
+export function calculateKdtSalesSummary(kdtSales, selectedYear) {
+  const filteredSales = kdtSales.filter(
+    (item) => Number(item.year) === Number(selectedYear),
+  );
+  
   const actual = kdtSales
     .filter((item) => item.type === '실제')
     .reduce(
