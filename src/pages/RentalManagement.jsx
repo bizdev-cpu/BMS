@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Icon from '../components/common/Icon';
 import SortTh from '../components/SortTh';
 import { applySort, useSortable } from '../util/sort';
@@ -8,7 +8,7 @@ import { calculateRentalSalesSummary } from '../lib/sales';
 export default function RentalManagement({ 
     rentals = [], 
     executeAction, 
-    formatKRW }) {
+    formatKRW, selectedYear, setSelectedYear }) {
             const [isFormOpen, setIsFormOpen] = useState(false);
             const [currentRental, setCurrentRental] = useState(null);
 
@@ -70,6 +70,13 @@ export default function RentalManagement({
             }, [calRef, filteredRentals]);
             const moveMonth = (delta) => setCalRef(p => { const d = new Date(p.y, p.m + delta, 1); return { y: d.getFullYear(), m: d.getMonth() }; });
             const todayYmd = fmtYmd(new Date());
+
+            useEffect(() => {
+                setCalRef((prev) => ({
+                    ...prev,
+                    y: Number(selectedYear),
+                }));
+            }, [selectedYear]);
 
             // 폼 상태
             const [formTitle, setFormTitle] = useState('');
@@ -364,7 +371,19 @@ export default function RentalManagement({
                                 <button onClick={() => moveMonth(-1)} className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm font-bold hover:bg-white">‹ 이전</button>
                                 <div className="flex items-center gap-3">
                                     <span className="text-lg font-extrabold text-slate-900">{calData.y}년 {calData.m + 1}월</span>
-                                    <button onClick={() => { const d = new Date(); setCalRef({ y: d.getFullYear(), m: d.getMonth() }); }} className="text-[11px] font-bold text-brand-600 border border-brand-200 rounded px-2 py-1 hover:bg-brand-50">오늘</button>
+                                    <button
+                                        onClick={() => {
+                                            const d = new Date();
+                                            setSelectedYear(d.getFullYear());
+                                            setCalRef({
+                                            y: d.getFullYear(),
+                                            m: d.getMonth(),
+                                            });
+                                        }}
+                                        className="text-[11px] font-bold text-brand-600 border border-brand-200 rounded px-2 py-1 hover:bg-brand-50"
+                                        >
+                                        오늘
+                                    </button>
                                 </div>
                                 <button onClick={() => moveMonth(1)} className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-sm font-bold hover:bg-white">다음 ›</button>
                             </div>
