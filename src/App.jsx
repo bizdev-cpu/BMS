@@ -41,6 +41,7 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [idToken, setIdToken] = useState(null);
+  const [sheetsAccessToken, setSheetsAccessToken] = useState(null);
 
   const handleLogin = ({ idToken, user }) => {
     console.log('BMS 로그인 성공:', user);
@@ -49,6 +50,13 @@ export default function App() {
     setIdToken(idToken);
     setCurrentUser(user);
   };
+
+  const handleSheetsAccess = (accessToken) => {
+    console.log('Sheets 권한 연결 완료');
+
+    setSheetsAccessToken(accessToken);
+  };
+
   
 
   const [mode, setMode] = useState('api');
@@ -139,12 +147,12 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (!idToken) {
+    if (!idToken || !sheetsAccessToken) {
       return;
     }
 
     loadData();
-  }, [idToken]);
+  }, [idToken, sheetsAccessToken]);
 
   const executeAction = async (actionName, payload) => {
     const result = await executeBmsAction(
@@ -236,8 +244,14 @@ export default function App() {
     );
   }, [targets, selectedSourceId]);
 
-  if (!idToken) {
-    return <Login onLogin={handleLogin} />;
+  if (!idToken || !sheetsAccessToken) {
+    return (
+      <Login
+        onLogin={handleLogin}
+        onSheetsAccess={handleSheetsAccess}
+        isGoogleLoggedIn={!!idToken}
+      />
+    );
   }
 
   return (
@@ -374,8 +388,10 @@ export default function App() {
                   {!loading &&
                     !error &&
                     activeTab === 'dataSource' && (
-                      <DataSourceManager />
-                    )}
+                      <DataSourceManager
+                        sheetsAccessToken={sheetsAccessToken}
+                      />
+                  )}
         </main>
       </div>
 

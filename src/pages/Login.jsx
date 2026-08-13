@@ -2,14 +2,45 @@ import { useEffect, useRef, useState } from 'react';
 
 import { verifyGoogleLogin } from '../api/bmsApi';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onSheetsAccess, isGoogleLoggedIn }) {
   const buttonRef = useRef(null);
 
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  const requestSheetsAccess = () => {
+    const tokenClient =
+        window.google.accounts.oauth2.initTokenClient({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+
+        scope:
+            'https://www.googleapis.com/auth/spreadsheets.readonly',
+
+        callback: (tokenResponse) => {
+            if (tokenResponse.error) {
+            console.error(
+                'Sheets 권한 요청 실패:',
+                tokenResponse,
+            );
+
+            setError('Google Sheets 권한을 가져오지 못했습니다.');
+            return;
+            }
+
+            const accessToken = tokenResponse.access_token;
+
+            console.log('Sheets Access Token 발급 성공');
+
+            // App.jsx로 전달
+            onSheetsAccess(accessToken);
+        },
+        });
+
+    tokenClient.requestAccessToken();
+    };
+
   useEffect(() => {
-    if (!window.google || !buttonRef.current) {
+    if (isGoogleLoggedIn || !window.google || !buttonRef.current) {
       return;
     }
 
@@ -58,7 +89,7 @@ export default function Login({ onLogin }) {
         shape: 'rectangular',
       },
     );
-  }, [onLogin]);
+  }, [onLogin, isGoogleLoggedIn]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100">
@@ -67,14 +98,34 @@ export default function Login({ onLogin }) {
           BMS
         </h1>
 
-        <p className="mt-2 text-sm text-slate-500">
-          Google 계정으로 로그인해주세요.
-        </p>
+        {isGoogleLoggedIn && (
+        <>
+            <div className="mt-6 rounded-lg bg-emerald-50 p-3">
+            <p className="text-sm font-bold text-emerald-700">
+                ✓ Google 로그인 완료
+            </p>
 
+            <p className="mt-1 text-xs text-emerald-600">
+                BMS에서 사용할 Google Sheets 접근 권한을 허용해주세요.
+            </p>
+            </div>
+
+            <button
+            type="button"
+            onClick={requestSheetsAccess}
+            className="mt-4 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-bold text-white"
+            >
+            Google Sheets 접근 권한 허용
+            </button>
+        </>
+        )}
+
+        {!isGoogleLoggedIn && (
         <div
-          ref={buttonRef}
-          className="mt-6"
+            ref={buttonRef}
+            className="mt-6"
         />
+        )}
 
         {isLoggingIn && (
           <p className="mt-4 text-sm text-slate-500">

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { gasRun } from '../api/bmsApi';
-export default function DataSourceManager() {
+export default function DataSourceManager({sheetsAccessToken, }) {
   const [sources, setSources] = useState([]);
 
   const [name, setName] = useState('');
@@ -33,11 +33,65 @@ export default function DataSourceManager() {
       return;
     }
 
+    if (!sheetsAccessToken) {
+      setMessage('Google Sheets 권한 정보가 없습니다.');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
     setTestResult(null);
 
     try {
+      // 1. URL에서 spreadsheetId 추출
+      const match = spreadsheetUrl.match(
+        /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,
+      );
+
+      if (!match) {
+        setMessage('올바른 Google Spreadsheet URL이 아닙니다.');
+        return;
+      }
+
+      const spreadsheetId = match[1];
+
+      // 2. 현재 로그인 사용자의 권한으로 Google Sheets API 호출
+      const permissionResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=spreadsheetId`,
+        {
+          headers: {
+            Authorization: `Bearer ${sheetsAccessToken}`,
+          },
+        },
+      );
+
+      // 3. 읽을 수 없는 시트라면 여기서 중단
+      if (!permissionResponse.ok) {
+        if (
+          permissionResponse.status === 403 ||
+          permissionResponse.status === 404
+        ) {
+          setMessage(
+            '현재 로그인한 Google 계정으로 접근할 수 없는 Spreadsheet입니다.',
+          );
+          return;
+        }
+
+        if (permissionResponse.status === 401) {
+          setMessage(
+            'Google 인증이 만료되었습니다. 다시 로그인해주세요.',
+          );
+          return;
+        }
+
+        setMessage(
+          'Spreadsheet 접근 권한을 확인하지 못했습니다.',
+        );
+        return;
+      }
+
+      // 4. 사용자 권한 확인 성공
+      // 그 다음 기존 Apps Script 데이터 소스 검사 실행
       const result = await gasRun(
         'apiTestDataSource',
         spreadsheetUrl,
@@ -50,8 +104,10 @@ export default function DataSourceManager() {
       }
     } catch (e) {
       console.error(e);
+
       setMessage(
-        e?.message || 'Spreadsheet 연결 확인에 실패했습니다.',
+        e?.message ||
+          'Spreadsheet 연결 확인에 실패했습니다.',
       );
     } finally {
       setLoading(false);
