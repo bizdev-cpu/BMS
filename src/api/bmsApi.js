@@ -1,4 +1,10 @@
 const API_URL = import.meta.env.VITE_BMS_API_URL;
+let authIdToken = null;
+
+export function setAuthIdToken(idToken) {
+  authIdToken = idToken;
+}
+
 
 function getApiUrl() {
   if (!API_URL) {
@@ -118,6 +124,7 @@ export async function gasRun(functionName, ...args) {
       action: 'gasRun',
       functionName,
       args,
+      idToken: authIdToken,
     }),
   });
 
@@ -138,4 +145,10 @@ export async function getCurrentUser() {
   );
 
   return parseResponse(response);
+}
+
+export async function verifyGoogleLogin(idToken) {
+  return executeBmsAction('verifyGoogleLogin', {
+    idToken,
+  });
 }

@@ -1,7 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+import { verifyGoogleLogin } from '../api/bmsApi';
 
 export default function Login({ onLogin }) {
   const buttonRef = useRef(null);
+
+  const [error, setError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     if (!window.google || !buttonRef.current) {
@@ -11,10 +16,35 @@ export default function Login({ onLogin }) {
     window.google.accounts.id.initialize({
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
 
-      callback: (response) => {
-        console.log('Google credential:', response.credential);
+      callback: async (response) => {
+        try {
+          setIsLoggingIn(true);
+          setError('');
 
-        onLogin(response.credential);
+          // Google이 발급한 ID Token
+          const idToken = response.credential;
+
+          // Apps Script에서 토큰 검증
+          const user = await verifyGoogleLogin(idToken);
+
+          console.log('인증된 사용자:', user);
+
+          // 서버 검증 성공한 경우에만 로그인 처리
+          onLogin({
+            idToken,
+            user,
+          });
+        } catch (error) {
+          console.error('Google 로그인 검증 실패:', error);
+
+          setError(
+            error instanceof Error
+              ? error.message
+              : '로그인에 실패했습니다.',
+          );
+        } finally {
+          setIsLoggingIn(false);
+        }
       },
     });
 
@@ -45,6 +75,18 @@ export default function Login({ onLogin }) {
           ref={buttonRef}
           className="mt-6"
         />
+
+        {isLoggingIn && (
+          <p className="mt-4 text-sm text-slate-500">
+            로그인 정보를 확인하고 있습니다.
+          </p>
+        )}
+
+        {error && (
+          <p className="mt-4 text-sm text-rose-600">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );

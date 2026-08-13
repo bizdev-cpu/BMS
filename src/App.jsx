@@ -14,7 +14,7 @@ import Login from './pages/Login';
 
 import {
   executeBmsAction,
-  readAllData, readAllIntegratedData, getCurrentUser,
+  readAllData, readAllIntegratedData, getCurrentUser, setAuthIdToken,
 } from './api/bmsApi';
 
 import DataSourceManager from './pages/DataSourceManager';
@@ -41,12 +41,15 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [idToken, setIdToken] = useState(null);
-  const handleLogin = (credential) => {
-    console.log('로그인 성공');
-    console.log('ID Token:', credential);
 
-    setIdToken(credential);
+  const handleLogin = ({ idToken, user }) => {
+    console.log('BMS 로그인 성공:', user);
+    setAuthIdToken(idToken);
+
+    setIdToken(idToken);
+    setCurrentUser(user);
   };
+  
 
   const [mode, setMode] = useState('api');
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -136,8 +139,12 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (!idToken) {
+      return;
+    }
+
     loadData();
-  }, []);
+  }, [idToken]);
 
   const executeAction = async (actionName, payload) => {
     const result = await executeBmsAction(
@@ -232,7 +239,7 @@ export default function App() {
   if (!idToken) {
     return <Login onLogin={handleLogin} />;
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-800">
       <Header

@@ -56,10 +56,6 @@ export default function Dashboard({
             )
 
             const confirmedSalesTotal = projectSalesSummary.actual + rentalSalesSummary.actual + kdtSalesSummary.actual;
-            console.log('용역 수주:', projectSalesSummary.actual);
-            console.log('대관 실제:', rentalSalesSummary.actual);
-            console.log('KDT 실제:', kdtSalesSummary.actual);
-            console.log('확정 사업 발생 매출:', confirmedSalesTotal);
             const expectedSalesTotal = projectSalesSummary.expected + rentalSalesSummary.expected + kdtSalesSummary.expected;
 
             // 연도별 및 월별 매출 분석
