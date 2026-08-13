@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { filterAccessibleSources } from './api/googleSheetsApi';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -14,7 +15,7 @@ import Login from './pages/Login';
 
 import {
   executeBmsAction,
-  readAllData, readAllIntegratedData, getCurrentUser, setAuthIdToken,
+  readAllData, readAllIntegratedData, getCurrentUser, setAuthIdToken, gasRun,
 } from './api/bmsApi';
 
 import DataSourceManager from './pages/DataSourceManager';
@@ -80,6 +81,53 @@ export default function App() {
 
   // 빌드 정보 API는 나중에 연결
   const buildInfo = null;
+
+  const checkDataSourceAccess = async () => {
+    try {
+      // 실제 사업 데이터를 읽지 않고
+      // 등록된 데이터 소스 목록만 가져옴
+      const sources = await gasRun('apiGetDataSources');
+
+      const sourceList = Array.isArray(sources)
+        ? sources
+        : [];
+
+      if (sourceList.length === 0) {
+        setHasDataSources(false);
+        setHasDataAccess(false);
+
+        return false;
+      }
+
+      setHasDataSources(true);
+
+      // 현재 로그인 사용자의 Access Token으로
+      // 각각의 Google Sheet 권한 확인
+      const accessibleSources =
+        await filterAccessibleSources(
+          sourceList,
+          sheetsAccessToken,
+        );
+
+      if (accessibleSources.length === 0) {
+        setHasDataAccess(false);
+        return false;
+      }
+
+      setHasDataAccess(true);
+
+      return true;
+    } catch (error) {
+      console.error(
+        '데이터 소스 권한 확인 실패:',
+        error,
+      );
+
+      setHasDataAccess(false);
+
+      return false;
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -147,11 +195,26 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (!idToken || !sheetsAccessToken) {
-      return;
-    }
+  if (!idToken || !sheetsAccessToken) {
+    return;
+  }
 
-    loadData();
+  const initializeData = async () => {
+      setLoading(true);
+      setError('');
+
+      const canAccess =
+        await checkDataSourceAccess();
+
+      if (!canAccess) {
+        setLoading(false);
+        return;
+      }
+
+      await loadData();
+    };
+
+    initializeData();
   }, [idToken, sheetsAccessToken]);
 
   const executeAction = async (actionName, payload) => {
@@ -167,6 +230,8 @@ export default function App() {
 
   const [selectedSourceId, setSelectedSourceId] = useState('all');
   const [dataSources, setDataSources] = useState([]);
+  const [hasDataAccess, setHasDataAccess] = useState(null);
+  const [hasDataSources, setHasDataSources] = useState(null);
 
   const filteredProjects = useMemo(() => {
     return projects.filter((item) => {
@@ -280,6 +345,46 @@ export default function App() {
             </div>
           )}
 
+          {!loading && hasDataAccess === false && hasDataSources === true && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-10 text-center">
+              <p className="text-lg font-bold text-amber-800">
+                데이터 접근 권한이 없습니다.
+              </p>
+
+              <p className="mt-2 text-sm text-amber-700">
+                현재 로그인한 Google 계정으로
+                등록된 데이터 소스에 접근할 수 없습니다.
+              </p>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Google Spreadsheet 관리자에게
+                열람 권한을 요청해주세요.
+              </p>
+            </div>
+          )}
+
+          {!loading &&
+            hasDataSources === false &&
+            activeTab !== 'dataSource' && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
+                <p className="text-lg font-bold text-slate-800">
+                  등록된 데이터 소스가 없습니다.
+                </p>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  BMS에서 사용할 Google Spreadsheet를 등록해주세요.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('dataSource')}
+                  className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white"
+                >
+                  데이터 소스 등록하기
+                </button>
+              </div>
+          )}
+
           {!loading && error && (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-600">
               <p className="font-bold">
@@ -301,7 +406,7 @@ export default function App() {
           )}
 
           {!loading &&
-            !error &&
+            !error && hasDataAccess === true &&
             activeTab === 'dashboard' && (
               <Dashboard
                 projects={filteredProjects}
@@ -318,7 +423,7 @@ export default function App() {
 
           {!loading &&
             !error &&
-            activeTab === 'projects' && (
+            activeTab === 'projects' && hasDataAccess === true && (
               <ProjectManagement
                 projects={filteredProjects}
                 executeAction={executeAction}
@@ -342,7 +447,7 @@ export default function App() {
 
             {!loading &&
               !error &&
-              activeTab === 'rental' && (
+              activeTab === 'rental' && hasDataAccess === true && (
                 <RentalManagement
                   rentals={filteredRentals}
                   executeAction={executeAction}
@@ -354,7 +459,7 @@ export default function App() {
 
               {!loading &&
                 !error &&
-                activeTab === 'kdt' && (
+                activeTab === 'kdt' && hasDataAccess === true && (
                   <KdtManagement
                     kdtMonthly={kdtMonthly}
                     formatKRW={formatKRW}
@@ -365,7 +470,7 @@ export default function App() {
 
                 {!loading &&
                   !error &&
-                  activeTab === 'settings' && (
+                  activeTab === 'settings' && hasDataAccess === true && (
                     <Settings
                       mode={mode}
                       setMode = {setMode}
@@ -375,7 +480,7 @@ export default function App() {
                   )}
                   {!loading &&
                     !error &&
-                    activeTab === 'monitoring' && (
+                    activeTab === 'monitoring' && hasDataAccess === true && (
                       <Monitoring
                         monitoring={filteredMonitoring}
                         executeAction={executeAction}
