@@ -58,19 +58,16 @@ export function calculateRentalSalesSummary(rentals) {
   };
 }
 
-export function calculateKdtSalesSummary(kdtSales, selectedYear) {
-  const filteredSales = kdtSales.filter(
-    (item) => Number(item.year) === Number(selectedYear),
-  );
 
-  const actual = filteredSales
+export function calculateKdtSalesSummary(kdtSales) {
+  const actual = kdtSales
     .filter((item) => item.type === '실제')
     .reduce(
       (sum, item) => sum + Number(item.amount || 0),
       0,
     );
 
-  const expectedOperating = filteredSales
+  const expectedOperating = kdtSales
     .filter(
       (item) =>
         item.type === '예상' &&
@@ -81,7 +78,7 @@ export function calculateKdtSalesSummary(kdtSales, selectedYear) {
       0,
     );
 
-  const expectedScheduled = filteredSales
+  const expectedScheduled = kdtSales
     .filter(
       (item) =>
         item.type === '예상' &&
