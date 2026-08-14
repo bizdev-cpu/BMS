@@ -40,9 +40,33 @@ export default function App() {
     new Date().getFullYear(),
   );
 
-  const [currentUser, setCurrentUser] = useState(null);
-  const [idToken, setIdToken] = useState(null);
-  const [sheetsAccessToken, setSheetsAccessToken] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = sessionStorage.getItem('bmsCurrentUser');
+
+    if (!saved) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return null;
+    }
+  });
+
+  const [idToken, setIdToken] = useState(
+    () => sessionStorage.getItem('bmsIdToken'),
+  );
+
+  const [sheetsAccessToken, setSheetsAccessToken] = useState(
+    () => sessionStorage.getItem('bmsSheetsAccessToken'),
+  );
+
+  useEffect(() => {
+    if (idToken) {
+      setAuthIdToken(idToken);
+    }
+  }, [idToken]);
 
   const handleLogin = ({ idToken, user }) => {
     console.log('BMS 로그인 성공:', user);
@@ -50,12 +74,47 @@ export default function App() {
 
     setIdToken(idToken);
     setCurrentUser(user);
+
+    sessionStorage.setItem('bmsIdToken', idToken);
+    sessionStorage.setItem(
+      'bmsCurrentUser',
+      JSON.stringify(user),
+    );
+    localStorage.removeItem('bmsLoggedOut');
   };
 
   const handleSheetsAccess = (accessToken) => {
     console.log('Sheets 권한 연결 완료');
 
     setSheetsAccessToken(accessToken);
+    sessionStorage.setItem(
+      'bmsSheetsAccessToken',
+      accessToken,
+    );
+  };
+
+  const handleLogout = () => {
+    window.google?.accounts.id.disableAutoSelect();
+
+    setCurrentUser(null);
+    setIdToken(null);
+    setSheetsAccessToken(null);
+
+    setAuthIdToken(null);
+
+    setHasDataAccess(null);
+    setHasDataSources(null);
+
+    setProjects([]);
+    setRentals([]);
+    setKdt([]);
+
+    // 로그인 유지 정보 삭제
+    sessionStorage.removeItem('bmsCurrentUser');
+    sessionStorage.removeItem('bmsIdToken');
+    sessionStorage.removeItem('bmsSheetsAccessToken');
+
+    localStorage.setItem('bmsLoggedOut', 'true');
   };
 
   
@@ -336,6 +395,8 @@ export default function App() {
           menus={menus}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
 
         <main className="min-w-0 flex-1 p-6">
@@ -346,7 +407,7 @@ export default function App() {
           )}
 
           {!loading && hasDataAccess === false && hasDataSources === true && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-10 text-center">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-10 text-center mb-10">
               <p className="text-lg font-bold text-amber-800">
                 데이터 접근 권한이 없습니다.
               </p>
@@ -366,7 +427,7 @@ export default function App() {
           {!loading &&
             hasDataSources === false &&
             activeTab !== 'dataSource' && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
+              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center mb-10">
                 <p className="text-lg font-bold text-slate-800">
                   등록된 데이터 소스가 없습니다.
                 </p>

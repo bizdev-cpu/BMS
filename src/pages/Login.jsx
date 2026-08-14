@@ -7,6 +7,33 @@ export default function Login({ onLogin, onSheetsAccess, isGoogleLoggedIn }) {
 
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const initializedRef = useRef(false);
+
+  const handleGoogleCredential = async (response) => {
+    try {
+      setIsLoggingIn(true);
+      setError('');
+
+      const idToken = response.credential;
+
+      const user = await verifyGoogleLogin(idToken);
+
+      onLogin({
+        idToken,
+        user,
+      });
+    } catch (error) {
+      console.error('Google 로그인 검증 실패:', error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : '로그인에 실패했습니다.',
+      );
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   const requestSheetsAccess = () => {
     const tokenClient =
@@ -40,43 +67,20 @@ export default function Login({ onLogin, onSheetsAccess, isGoogleLoggedIn }) {
     };
 
   useEffect(() => {
-    if (isGoogleLoggedIn || !window.google || !buttonRef.current) {
+    if (
+      isGoogleLoggedIn ||
+      !window.google ||
+      !buttonRef.current ||
+      initializedRef.current
+    ) {
       return;
     }
 
+    initializedRef.current = true;
+
     window.google.accounts.id.initialize({
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-
-      callback: async (response) => {
-        try {
-          setIsLoggingIn(true);
-          setError('');
-
-          // Google이 발급한 ID Token
-          const idToken = response.credential;
-
-          // Apps Script에서 토큰 검증
-          const user = await verifyGoogleLogin(idToken);
-
-          console.log('인증된 사용자:', user);
-
-          // 서버 검증 성공한 경우에만 로그인 처리
-          onLogin({
-            idToken,
-            user,
-          });
-        } catch (error) {
-          console.error('Google 로그인 검증 실패:', error);
-
-          setError(
-            error instanceof Error
-              ? error.message
-              : '로그인에 실패했습니다.',
-          );
-        } finally {
-          setIsLoggingIn(false);
-        }
-      },
+      callback: handleGoogleCredential,
     });
 
     window.google.accounts.id.renderButton(
@@ -89,7 +93,8 @@ export default function Login({ onLogin, onSheetsAccess, isGoogleLoggedIn }) {
         shape: 'rectangular',
       },
     );
-  }, [onLogin, isGoogleLoggedIn]);
+
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100">
@@ -97,10 +102,11 @@ export default function Login({ onLogin, onSheetsAccess, isGoogleLoggedIn }) {
         <h1 className="text-2xl font-black text-slate-900">
           BMS
         </h1>
+        <p className='text-sm mt-3'> 버튼을 눌러 로그인을 진행해주세요 </p>
 
         {isGoogleLoggedIn && (
         <>
-            <div className="mt-6 rounded-lg bg-emerald-50 p-3">
+            <div className="mt-3 rounded-lg bg-emerald-50 p-3">
             <p className="text-sm font-bold text-emerald-700">
                 ✓ Google 로그인 완료
             </p>

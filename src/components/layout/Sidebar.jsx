@@ -4,9 +4,12 @@ export default function Sidebar({
   menus,
   activeTab,
   setActiveTab,
+  currentUser,
+  onLogout,
 }) {
   return (
-    <aside className="w-60 shrink-0 border-r border-slate-200 bg-white p-4">
+    <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white p-4">
+      {/* 메뉴 */}
       <nav className="space-y-1">
         {menus.map((menu) => {
           const active = activeTab === menu.id;
@@ -28,6 +31,39 @@ export default function Sidebar({
           );
         })}
       </nav>
+
+      {/* 로그인 사용자 */}
+      {currentUser && (
+        <div className="mt-auto border-t border-slate-200 pt-4">
+          <div className="flex items-center gap-3">
+            {currentUser.picture && (
+              <img
+                src={currentUser.picture}
+                alt=""
+                className="h-9 w-9 shrink-0 rounded-full"
+              />
+            )}
+
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-slate-800">
+                {currentUser.name}
+              </p>
+
+              <p className="truncate text-xs text-slate-500">
+                {currentUser.email}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onLogout}
+            className="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
+          >
+            로그아웃
+          </button>
+        </div>
+      )}
     </aside>
   );
 }
