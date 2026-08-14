@@ -102,7 +102,7 @@ export default function Login({ onLogin, onSheetsAccess, isGoogleLoggedIn }) {
         <h1 className="text-2xl font-black text-slate-900">
           BMS
         </h1>
-        <p className='text-sm mt-3'> 버튼을 눌러 로그인을 진행해주세요 </p>
+        <p className='text-sm mt-3'> 로그인을 진행해주세요 </p>
 
         {isGoogleLoggedIn && (
         <>
