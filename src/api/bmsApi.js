@@ -1,4 +1,10 @@
 const API_URL = import.meta.env.VITE_BMS_API_URL;
+let authIdToken = null;
+
+export function setAuthIdToken(idToken) {
+  authIdToken = idToken;
+}
+
 
 function getApiUrl() {
   if (!API_URL) {
@@ -118,8 +124,31 @@ export async function gasRun(functionName, ...args) {
       action: 'gasRun',
       functionName,
       args,
+      idToken: authIdToken,
     }),
   });
 
   return parseResponse(response);
+}
+
+
+export async function getCurrentUser() {
+  const apiUrl = getApiUrl();
+
+  const response = await fetch(
+    `${apiUrl}?action=getCurrentUser`,
+    {
+      method: 'GET',
+      redirect: 'follow',
+      cache: 'no-store',
+    },
+  );
+
+  return parseResponse(response);
+}
+
+export async function verifyGoogleLogin(idToken) {
+  return executeBmsAction('verifyGoogleLogin', {
+    idToken,
+  });
 }

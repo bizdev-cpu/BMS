@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { filterAccessibleSources } from './api/googleSheetsApi';
 
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
@@ -10,10 +11,11 @@ import RentalManagement from './pages/RentalManagement';
 import KdtManagement from './pages/KdtManagement';
 import Settings from './pages/Settings';
 import Monitoring from './pages/Monitoring';
+import Login from './pages/Login';
 
 import {
   executeBmsAction,
-  readAllData, readAllIntegratedData
+  readAllData, readAllIntegratedData, getCurrentUser, setAuthIdToken, gasRun,
 } from './api/bmsApi';
 
 import DataSourceManager from './pages/DataSourceManager';
@@ -38,6 +40,85 @@ export default function App() {
     new Date().getFullYear(),
   );
 
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = sessionStorage.getItem('bmsCurrentUser');
+
+    if (!saved) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return null;
+    }
+  });
+
+  const [idToken, setIdToken] = useState(
+    () => sessionStorage.getItem('bmsIdToken'),
+  );
+
+  const [sheetsAccessToken, setSheetsAccessToken] = useState(
+    () => sessionStorage.getItem('bmsSheetsAccessToken'),
+  );
+
+  useEffect(() => {
+    if (idToken) {
+      setAuthIdToken(idToken);
+    }
+  }, [idToken]);
+
+  const handleLogin = ({ idToken, user }) => {
+    console.log('BMS 로그인 성공:', user);
+    setAuthIdToken(idToken);
+
+    setIdToken(idToken);
+    setCurrentUser(user);
+
+    sessionStorage.setItem('bmsIdToken', idToken);
+    sessionStorage.setItem(
+      'bmsCurrentUser',
+      JSON.stringify(user),
+    );
+    localStorage.removeItem('bmsLoggedOut');
+  };
+
+  const handleSheetsAccess = (accessToken) => {
+    console.log('Sheets 권한 연결 완료');
+
+    setSheetsAccessToken(accessToken);
+    sessionStorage.setItem(
+      'bmsSheetsAccessToken',
+      accessToken,
+    );
+  };
+
+  const handleLogout = () => {
+    window.google?.accounts.id.disableAutoSelect();
+
+    setCurrentUser(null);
+    setIdToken(null);
+    setSheetsAccessToken(null);
+
+    setAuthIdToken(null);
+
+    setHasDataAccess(null);
+    setHasDataSources(null);
+
+    setProjects([]);
+    setRentals([]);
+    setKdt([]);
+
+    // 로그인 유지 정보 삭제
+    sessionStorage.removeItem('bmsCurrentUser');
+    sessionStorage.removeItem('bmsIdToken');
+    sessionStorage.removeItem('bmsSheetsAccessToken');
+
+    localStorage.setItem('bmsLoggedOut', 'true');
+  };
+
+  
+
   const [mode, setMode] = useState('api');
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -59,6 +140,53 @@ export default function App() {
 
   // 빌드 정보 API는 나중에 연결
   const buildInfo = null;
+
+  const checkDataSourceAccess = async () => {
+    try {
+      // 실제 사업 데이터를 읽지 않고
+      // 등록된 데이터 소스 목록만 가져옴
+      const sources = await gasRun('apiGetDataSources');
+
+      const sourceList = Array.isArray(sources)
+        ? sources
+        : [];
+
+      if (sourceList.length === 0) {
+        setHasDataSources(false);
+        setHasDataAccess(false);
+
+        return false;
+      }
+
+      setHasDataSources(true);
+
+      // 현재 로그인 사용자의 Access Token으로
+      // 각각의 Google Sheet 권한 확인
+      const accessibleSources =
+        await filterAccessibleSources(
+          sourceList,
+          sheetsAccessToken,
+        );
+
+      if (accessibleSources.length === 0) {
+        setHasDataAccess(false);
+        return false;
+      }
+
+      setHasDataAccess(true);
+
+      return true;
+    } catch (error) {
+      console.error(
+        '데이터 소스 권한 확인 실패:',
+        error,
+      );
+
+      setHasDataAccess(false);
+
+      return false;
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -126,8 +254,27 @@ export default function App() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+  if (!idToken || !sheetsAccessToken) {
+    return;
+  }
+
+  const initializeData = async () => {
+      setLoading(true);
+      setError('');
+
+      const canAccess =
+        await checkDataSourceAccess();
+
+      if (!canAccess) {
+        setLoading(false);
+        return;
+      }
+
+      await loadData();
+    };
+
+    initializeData();
+  }, [idToken, sheetsAccessToken]);
 
   const executeAction = async (actionName, payload) => {
     const result = await executeBmsAction(
@@ -142,6 +289,8 @@ export default function App() {
 
   const [selectedSourceId, setSelectedSourceId] = useState('all');
   const [dataSources, setDataSources] = useState([]);
+  const [hasDataAccess, setHasDataAccess] = useState(null);
+  const [hasDataSources, setHasDataSources] = useState(null);
 
   const filteredProjects = useMemo(() => {
     return projects.filter((item) => {
@@ -219,6 +368,16 @@ export default function App() {
     );
   }, [targets, selectedSourceId]);
 
+  if (!idToken || !sheetsAccessToken) {
+    return (
+      <Login
+        onLogin={handleLogin}
+        onSheetsAccess={handleSheetsAccess}
+        isGoogleLoggedIn={!!idToken}
+      />
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-800">
       <Header
@@ -236,6 +395,8 @@ export default function App() {
           menus={menus}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
 
         <main className="min-w-0 flex-1 p-6">
@@ -243,6 +404,46 @@ export default function App() {
             <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
               Google Sheet 데이터를 불러오는 중입니다.
             </div>
+          )}
+
+          {!loading && hasDataAccess === false && hasDataSources === true && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-10 text-center mb-10">
+              <p className="text-lg font-bold text-amber-800">
+                데이터 접근 권한이 없습니다.
+              </p>
+
+              <p className="mt-2 text-sm text-amber-700">
+                현재 로그인한 Google 계정으로
+                등록된 데이터 소스에 접근할 수 없습니다.
+              </p>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Google Spreadsheet 관리자에게
+                열람 권한을 요청해주세요.
+              </p>
+            </div>
+          )}
+
+          {!loading &&
+            hasDataSources === false &&
+            activeTab !== 'dataSource' && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center mb-10">
+                <p className="text-lg font-bold text-slate-800">
+                  등록된 데이터 소스가 없습니다.
+                </p>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  BMS에서 사용할 Google Spreadsheet를 등록해주세요.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('dataSource')}
+                  className="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white"
+                >
+                  데이터 소스 등록하기
+                </button>
+              </div>
           )}
 
           {!loading && error && (
@@ -266,7 +467,7 @@ export default function App() {
           )}
 
           {!loading &&
-            !error &&
+            !error && hasDataAccess === true &&
             activeTab === 'dashboard' && (
               <Dashboard
                 projects={filteredProjects}
@@ -283,7 +484,7 @@ export default function App() {
 
           {!loading &&
             !error &&
-            activeTab === 'projects' && (
+            activeTab === 'projects' && hasDataAccess === true && (
               <ProjectManagement
                 projects={filteredProjects}
                 executeAction={executeAction}
@@ -307,7 +508,7 @@ export default function App() {
 
             {!loading &&
               !error &&
-              activeTab === 'rental' && (
+              activeTab === 'rental' && hasDataAccess === true && (
                 <RentalManagement
                   rentals={filteredRentals}
                   executeAction={executeAction}
@@ -319,7 +520,7 @@ export default function App() {
 
               {!loading &&
                 !error &&
-                activeTab === 'kdt' && (
+                activeTab === 'kdt' && hasDataAccess === true && (
                   <KdtManagement
                     kdtMonthly={kdtMonthly}
                     formatKRW={formatKRW}
@@ -330,7 +531,7 @@ export default function App() {
 
                 {!loading &&
                   !error &&
-                  activeTab === 'settings' && (
+                  activeTab === 'settings' && hasDataAccess === true && (
                     <Settings
                       mode={mode}
                       setMode = {setMode}
@@ -340,7 +541,7 @@ export default function App() {
                   )}
                   {!loading &&
                     !error &&
-                    activeTab === 'monitoring' && (
+                    activeTab === 'monitoring' && hasDataAccess === true && (
                       <Monitoring
                         monitoring={filteredMonitoring}
                         executeAction={executeAction}
@@ -353,8 +554,10 @@ export default function App() {
                   {!loading &&
                     !error &&
                     activeTab === 'dataSource' && (
-                      <DataSourceManager />
-                    )}
+                      <DataSourceManager
+                        sheetsAccessToken={sheetsAccessToken}
+                      />
+                  )}
         </main>
       </div>
 
