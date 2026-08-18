@@ -56,8 +56,6 @@ export default function Login({ onLogin, onSheetsAccess, isGoogleLoggedIn }) {
 
             const accessToken = tokenResponse.access_token;
 
-            console.log('Sheets Access Token 발급 성공');
-
             // App.jsx로 전달
             onSheetsAccess(accessToken);
         },
