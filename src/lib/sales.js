@@ -100,3 +100,4 @@ export function calculateKdtSalesSummary(kdtSales) {
     total: actual + expected,
   };
 }
+
