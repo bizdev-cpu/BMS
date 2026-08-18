@@ -155,7 +155,7 @@ export default function App() {
         setHasDataSources(false);
         setHasDataAccess(false);
 
-        return false;
+        return [];
       }
 
       setHasDataSources(true);
@@ -170,12 +170,12 @@ export default function App() {
 
       if (accessibleSources.length === 0) {
         setHasDataAccess(false);
-        return false;
+        return [];
       }
 
       setHasDataAccess(true);
 
-      return true;
+      return accessibleSources;
     } catch (error) {
       console.error(
         '데이터 소스 권한 확인 실패:',
@@ -188,14 +188,17 @@ export default function App() {
     }
   };
 
-  const loadData = async () => {
+  const loadData = async (accessibleSources) => {
     setLoading(true);
     setError('');
 
-    const start = performance.now();
-
     try {
-      const data = await readAllIntegratedData();
+      const sourceIds = accessibleSources.map(
+        (source) => source.id,
+      );
+
+      console.log('조회할 sourceIds:', sourceIds);
+      const data = await readAllIntegratedData(sourceIds);
 
       setProjects(
         Array.isArray(data.projects) ? data.projects : [],
@@ -262,15 +265,20 @@ export default function App() {
       setLoading(true);
       setError('');
 
-      const canAccess =
+      const accessibleSources =
         await checkDataSourceAccess();
 
-      if (!canAccess) {
+      if (accessibleSources.length === 0) {
         setLoading(false);
         return;
       }
 
-      await loadData();
+      console.log(
+        '접근 가능한 데이터 소스:',
+        accessibleSources,
+      );
+
+      await loadData(accessibleSources);
     };
 
     initializeData();

@@ -42,8 +42,8 @@ export async function readAllData() {
   return parseResponse(response);
 }
 
-export async function readAllIntegratedData() {
-  return gasRun('apiReadAllIntegrated');
+export async function readAllIntegratedData(sourceIds) {
+  return gasRun('apiReadAllIntegrated', sourceIds,);
 }
 
 export async function executeBmsAction(action, payload = {}) {
