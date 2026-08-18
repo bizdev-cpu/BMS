@@ -111,11 +111,13 @@ export async function saveSheetConfig(payload) {
 
 
 export async function gasRun(functionName, ...args) {
+  const idToken =
+    authIdToken ||
+    sessionStorage.getItem('bmsIdToken');
+
   const response = await fetch(API_URL, {
     method: 'POST',
 
-    // application/json 쓰면 CORS preflight가 발생할 수 있어서
-    // GAS에서는 text/plain이 안전함
     headers: {
       'Content-Type': 'text/plain;charset=utf-8',
     },
@@ -124,7 +126,7 @@ export async function gasRun(functionName, ...args) {
       action: 'gasRun',
       functionName,
       args,
-      idToken: authIdToken,
+      idToken,
     }),
   });
 
