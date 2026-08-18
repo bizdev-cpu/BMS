@@ -434,7 +434,7 @@ export default function Dashboard({
                             <div className="absolute -right-4 -bottom-4 opacity-10 text-amber-600 group-hover:scale-110 transition-transform duration-300">
                                 <Icon name="kdt" className="w-24 h-24" />
                             </div>
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">KDT 매출</span>
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">부트캠프 매출</span>
                             <div className="text-2xl font-black text-amber-600 mt-2 tracking-tight">{formatKRW(monthlyStats.kdtTotal)}</div>
                             <div className="text-xs text-slate-400 font-medium mt-1">
                                 현재까지 발생 합산
@@ -752,3 +752,4 @@ export default function Dashboard({
                 </div>
             );
         }
+
