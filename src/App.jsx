@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { filterAccessibleSources } from './api/googleSheetsApi';
 
 import Header from './components/layout/Header';
@@ -69,7 +69,6 @@ export default function App() {
   }, [idToken]);
 
   const handleLogin = ({ idToken, user }) => {
-    console.log('BMS 로그인 성공:', user);
     setAuthIdToken(idToken);
 
     setIdToken(idToken);
@@ -84,7 +83,6 @@ export default function App() {
   };
 
   const handleSheetsAccess = (accessToken) => {
-    console.log('Sheets 권한 연결 완료');
 
     setSheetsAccessToken(accessToken);
     sessionStorage.setItem(
@@ -117,6 +115,7 @@ export default function App() {
     localStorage.setItem('bmsLoggedOut', 'true');
   };
 
+  const hasInitializedRef = useRef(false);
   
 
   const [mode, setMode] = useState('api');
@@ -145,6 +144,7 @@ export default function App() {
     try {
       // 실제 사업 데이터를 읽지 않고
       // 등록된 데이터 소스 목록만 가져옴
+      const sourceStart = performance.now();
       const sources = await gasRun('apiGetDataSources');
 
       const sourceList = Array.isArray(sources)
@@ -155,13 +155,16 @@ export default function App() {
         setHasDataSources(false);
         setHasDataAccess(false);
 
-        return false;
+        return [];
       }
 
       setHasDataSources(true);
 
       // 현재 로그인 사용자의 Access Token으로
       // 각각의 Google Sheet 권한 확인
+
+      const accessStart = performance.now();
+
       const accessibleSources =
         await filterAccessibleSources(
           sourceList,
@@ -170,12 +173,12 @@ export default function App() {
 
       if (accessibleSources.length === 0) {
         setHasDataAccess(false);
-        return false;
+        return [];
       }
 
       setHasDataAccess(true);
 
-      return true;
+      return accessibleSources;
     } catch (error) {
       console.error(
         '데이터 소스 권한 확인 실패:',
@@ -188,14 +191,21 @@ export default function App() {
     }
   };
 
-  const loadData = async () => {
+  const loadData = async (accessibleSources) => {
     setLoading(true);
     setError('');
 
-    const start = performance.now();
+    const sourceIds = accessibleSources.map(
+      (source) => source.id,
+    );
 
     try {
-      const data = await readAllIntegratedData();
+      const start = performance.now();
+
+      const data =
+        await readAllIntegratedData(sourceIds);
+
+    // 아래 기존 setProjects, setRentals 등 그대로
 
       setProjects(
         Array.isArray(data.projects) ? data.projects : [],
@@ -258,19 +268,26 @@ export default function App() {
     return;
   }
 
+  if (hasInitializedRef.current) {
+    return;
+  }
+
+  hasInitializedRef.current = true;
+
   const initializeData = async () => {
       setLoading(true);
       setError('');
 
-      const canAccess =
+      const accessibleSources =
         await checkDataSourceAccess();
 
-      if (!canAccess) {
+      if (accessibleSources.length === 0) {
         setLoading(false);
         return;
       }
 
-      await loadData();
+
+      await loadData(accessibleSources);
     };
 
     initializeData();

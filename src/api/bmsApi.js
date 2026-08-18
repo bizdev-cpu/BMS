@@ -42,8 +42,8 @@ export async function readAllData() {
   return parseResponse(response);
 }
 
-export async function readAllIntegratedData() {
-  return gasRun('apiReadAllIntegrated');
+export async function readAllIntegratedData(sourceIds) {
+  return gasRun('apiReadAllIntegrated', sourceIds,);
 }
 
 export async function executeBmsAction(action, payload = {}) {
@@ -111,17 +111,19 @@ export async function saveSheetConfig(payload) {
 
 
 export async function gasRun(functionName, ...args) {
+  const totalStart = performance.now();
+
   const idToken =
     authIdToken ||
     sessionStorage.getItem('bmsIdToken');
 
+  const fetchStart = performance.now();
+
   const response = await fetch(API_URL, {
     method: 'POST',
-
     headers: {
       'Content-Type': 'text/plain;charset=utf-8',
     },
-
     body: JSON.stringify({
       action: 'gasRun',
       functionName,
@@ -130,7 +132,12 @@ export async function gasRun(functionName, ...args) {
     }),
   });
 
-  return parseResponse(response);
+
+  const parseStart = performance.now();
+
+  const result = await parseResponse(response);
+
+  return result;
 }
 
 
