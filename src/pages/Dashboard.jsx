@@ -625,7 +625,7 @@ export default function Dashboard({
                                 <p className="text-xs text-slate-400">현재 보기 합계: <span className="text-blue-700 font-semibold">{formatKRW(viewTotal)}</span></p>
                             </div>
                             {/* 소스별 보기 토글 (전체 / 제안 사업 / 대관 사업 / KDT) */}
-                            <div className="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200">
+                            <div className="flex flex-wrap items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
                                 {[
                                     { id: 'all', label: '전체 보기' },
                                     { id: 'kdt', label: 'KDT' },
@@ -644,7 +644,7 @@ export default function Dashboard({
                         </div>
 
                         {/* 현재 보기 기준 범례 */}
-                        <div className="flex items-center space-x-4 text-xs font-semibold text-slate-500 mb-2 h-4">
+                        <div className="mb-2 flex min-h-4 flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-slate-500">
                             {showKdt && kdtCatNames.map(n => (
                                 <span key={n} className="flex items-center"><span className="w-3 h-3 rounded-sm mr-1.5" style={{ backgroundColor: KDT_COLORS[n] || '#f59e0b' }}></span>{n}</span>
                             ))}
@@ -655,7 +655,8 @@ export default function Dashboard({
                         </div>
 
                         {/* 그래프 영역 */}
-                        <div className="relative w-full h-80 pt-6">
+                        <div className="w-full overflow-x-auto">
+                            <div className="relative h-80 min-w-[760px] pt-6">
                             {/* Y축 그리드 가이드 및 금액 (깔끔한 눈금 + 축약 표기) */}
                             <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-slate-400 font-medium pointer-events-none pb-8 pl-2">
                                 {axisTicks.map((t, i) => (
@@ -722,7 +723,7 @@ export default function Dashboard({
                                             </div>
 
                                             {/* 누적 바 기둥 (토글에 따라 분리 표시) */}
-                                            <div className="w-10 rounded-t-md overflow-hidden flex flex-col justify-end transition-all duration-500 ease-out group-hover:scale-x-105" style={{ height: `${Math.max(totalHeight, 1.5)}%` }}>
+                                            <div className="flex w-8 flex-col justify-end overflow-hidden rounded-t-md transition-all duration-500 ease-out group-hover:scale-x-105 md:w-10" style={{ height: `${Math.max(totalHeight, 1.5)}%` }}>
                                                 {/* 대관 바 (맨 위) */}
                                                 {showRental && <div className="bg-cyan-400 w-full" style={{ height: `${(rentalHeight / Math.max(totalHeight, 1)) * 100}%` }}></div>}
                                                 {/* 제안 예상 바 (빗금 — 파이프라인/모니터링) */}
@@ -746,6 +747,7 @@ export default function Dashboard({
                                     );
                                 })}
                             </div>
+                        </div>
                         </div>
                     </div>
 

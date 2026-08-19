@@ -25,6 +25,7 @@ import { formatKRW } from './util/format';
 const APP_VERSION = '0.0.1';
 const APP_UPDATED = '2026-06-26';
 
+
 const menus = [
   { id: 'dashboard', label: '대시보드', icon: 'dashboard' },
   { id: 'projects', label: '용역 사업', icon: 'project' },
@@ -36,6 +37,7 @@ const menus = [
 ];
 
 export default function App() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedYear, setSelectedYear] = useState(
     new Date().getFullYear(),
   );
@@ -401,7 +403,7 @@ export default function App() {
         selectedYear={selectedYear}
         setSelectedYear={setSelectedYear}
         mode={mode}
-
+        onMenuOpen={() => setMobileMenuOpen(true)}
         dataSources={dataSources}
         selectedSourceId={selectedSourceId}
         setSelectedSourceId={setSelectedSourceId}
@@ -414,6 +416,8 @@ export default function App() {
           setActiveTab={setActiveTab}
           currentUser={currentUser}
           onLogout={handleLogout}
+          mobileMenuOpen={mobileMenuOpen}
+          onMobileMenuClose={() => setMobileMenuOpen(false)}
         />
 
         <main className="min-w-0 flex-1 p-6">
